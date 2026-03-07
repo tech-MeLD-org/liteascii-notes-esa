@@ -1,0 +1,269 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Navigation from '../../components/Navigation.svelte';
+import Footer from '../../components/Footer.astro';
+import { getCollection, render } from 'astro:content';
+
+// ── Static paths ──────────────────────────────────────────────────────────
+export async function getStaticPaths() {
+  const notes = await getCollection('notes');
+  return notes.map(note => ({
+    params: { slug: note.id.replace(/\.md$/, '') },
+    props: { note },
+  }));
+}
+
+const { note } = Astro.props;
+const { Content, headings } = await render(note);
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function getTitle(n: any): string {
+  if (n.data.title) return n.data.title;
+  const match = n.body?.match(/^#\s+(.+)/m);
+  if (match) return match[1].trim();
+  return n.id.replace(/\.md$/, '').split('/').pop() || 'Untitled';
+}
+
+const title = getTitle(note);
+const dateStr = note.data.date
+  ? new Date(note.data.date).toLocaleDateString('zh-CN', {
+      year: 'numeric', month: 'long', day: 'numeric',
+    })
+  : null;
+
+// ToC: only H2 and H3 (H1 is the page title, skip depth > 3)
+const toc = headings.filter(h => h.depth === 2 || h.depth === 3);
+const hasToc = toc.length > 1;
+---
+
+<Layout title={`${title} · LiteASCII`} description={note.data.description}>
+  <Navigation client:load />
+
+  <!--
+    Layout logic:
+    - No ToC  → .note-layout (block) > .note-main (max-width centered)
+    - Has ToC → .note-layout.with-toc (grid: sidebar | main)
+  -->
+  <div class:list={['note-layout', { 'with-toc': hasToc }]}>
+
+    <!-- ToC sidebar — only rendered when hasToc -->
+    {hasToc && (
+      <aside class="toc-sidebar">
+        <p class="toc-label">目 录</p>
+        <nav class="toc-nav">
+          {toc.map(h => (
+            <a
+              href={`#${h.slug}`}
+              class:list={['toc-link', h.depth === 2 ? 'h2' : 'h3']}
+            >
+              {h.text}
+            </a>
+          ))}
+        </nav>
+      </aside>
+    )}
+
+    <!-- Main article -->
+    <main class="note-main">
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span aria-hidden="true">›</span>
+        <a href="/notes">Notes</a>
+        {note.id.includes('/') && (
+          <>
+            <span aria-hidden="true">›</span>
+            <span class="bc-folder">{note.id.split('/').slice(0, -1).join('/')}</span>
+          </>
+        )}
+      </nav>
+
+      <!-- Article -->
+      <article data-pagefind-body>
+        <header class="note-header">
+          <h1 data-pagefind-meta="title">{title}</h1>
+          <div class="note-meta">
+            {dateStr && <time>{dateStr}</time>}
+            {note.data.tags && note.data.tags.length > 0 && (
+              <div class="meta-tags">
+                {note.data.tags.map((tag: string) => (
+                  <span class="red-tag">{tag}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        </header>
+
+        <div class="prose">
+          <Content />
+        </div>
+      </article>
+
+      <div class="note-footer">
+        <a href="/notes" class="back-link">← Back to Notes</a>
+      </div>
+    </main>
+  </div>
+
+  <Footer />
+</Layout>
+
+<style>
+/* ── Page wrapper ────────────────────────────────────────────────────────── */
+.note-layout {
+  padding-top: var(--nav-h);
+}
+
+/* ── No ToC: center the article ─────────────────────────────────────────── */
+.note-main {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+/* ── Has ToC: sidebar + article (grid) ───────────────────────────────────── */
+.note-layout.with-toc {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 740px);
+  column-gap: 3rem;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding-inline: 1.5rem;
+  align-items: start;
+}
+
+.note-layout.with-toc .note-main {
+  /* grid handles width; reset centering margins */
+  max-width: none;
+  margin: 0;
+  padding-inline: 0;
+}
+
+@media (max-width: 860px) {
+  .note-layout.with-toc {
+    display: block;
+  }
+  .note-layout.with-toc .note-main {
+    max-width: 740px;
+    margin: 0 auto;
+    padding-inline: 1.5rem;
+  }
+  .toc-sidebar { display: none; }
+}
+
+/* ── ToC Sidebar ─────────────────────────────────────────────────────────── */
+.toc-sidebar {
+  position: sticky;
+  top: calc(var(--nav-h) + 2rem);
+  padding-top: 2rem;
+  align-self: start;
+}
+
+.toc-label {
+  font-size: 0.65rem;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-3);
+  margin: 0 0 0.75rem;
+}
+
+.toc-nav {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Base link */
+.toc-link {
+  display: block;
+  font-family: 'Courier New', monospace;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  border-left: 2px solid transparent;
+}
+.toc-link:hover {
+  color: var(--red);
+  border-left-color: var(--red);
+}
+
+/* H2 — section title */
+.toc-link.h2 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-2);
+  padding: 0.3rem 0 0.3rem 0.75rem;
+  margin-top: 0.25rem;
+}
+.toc-link.h2:first-child { margin-top: 0; }
+
+/* H3 — subsection (indented, subdued) */
+.toc-link.h3 {
+  font-size: 0.73rem;
+  font-weight: 400;
+  color: var(--text-3);
+  padding: 0.18rem 0 0.18rem 1.5rem;
+}
+.toc-link.h3:hover { color: var(--red); }
+
+/* ── Breadcrumb ──────────────────────────────────────────────────────────── */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.74rem;
+  color: var(--text-3);
+  font-family: 'Courier New', monospace;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+}
+.breadcrumb a { color: var(--text-3); transition: color 0.15s; }
+.breadcrumb a:hover { color: var(--red); }
+.bc-folder { color: var(--text-3); }
+
+/* ── Note Header ─────────────────────────────────────────────────────────── */
+.note-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.note-header h1 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0 0 0.75rem;
+}
+
+.note-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.note-meta time {
+  font-size: 0.74rem;
+  color: var(--text-3);
+  font-family: 'Courier New', monospace;
+}
+
+.meta-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+/* ── Foot nav ────────────────────────────────────────────────────────────── */
+.note-footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.back-link {
+  font-size: 0.82rem;
+  color: var(--red);
+  font-family: 'Courier New', monospace;
+  transition: color 0.15s;
+}
+.back-link:hover { color: var(--red-2); }
+</style>

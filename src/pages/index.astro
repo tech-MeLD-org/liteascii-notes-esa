@@ -1,0 +1,224 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navigation from '../components/Navigation.svelte';
+import AsciiArt from '../components/AsciiArt.svelte';
+import ObsidianGraph from '../components/ObsidianGraph.svelte';
+import PostCard from '../components/PostCard.astro';
+import Footer from '../components/Footer.astro';
+import { getCollection } from 'astro:content';
+
+// ── Load notes ─────────────────────────────────────────────────────────────
+const allNotes = await getCollection('notes');
+
+// Sort by date if available, else by title
+const sorted = [...allNotes].sort((a, b) => {
+  const da = a.data.date ? new Date(a.data.date).getTime() : 0;
+  const db = b.data.date ? new Date(b.data.date).getTime() : 0;
+  return db - da;
+});
+
+const recent = sorted.slice(0, 6);
+
+// ── Extract title from note body (first # heading or filename) ─────────────
+function getTitle(note) {
+  if (note.data.title) return note.data.title;
+  const match = note.body?.match(/^#\s+(.+)/m);
+  if (match) return match[1].trim();
+  return note.id.replace(/\.md$/, '').split('/').pop() || 'Untitled';
+}
+
+// ── Build note slug for URL ─────────────────────────────────────────────────
+function noteSlug(note) {
+  return note.id.replace(/\.md$/, '');
+}
+
+// ── Build knowledge graph from real content links ──────────────────────────
+function buildGraph(notes) {
+  const nodeList = notes.map((note, i) => ({
+    id: i,
+    label: getTitle(note),
+    href: '/notes/' + noteSlug(note),
+  }));
+
+  // Index by filename (without extension, case-insensitive)
+  const byName = new Map();
+  notes.forEach((note, i) => {
+    const name = (note.id.replace(/\.md$/, '').split('/').pop() || '').toLowerCase();
+    byName.set(name, i);
+  });
+
+  const edgeSet = new Set();
+  const edgeList = [];
+
+  notes.forEach((note, srcIdx) => {
+    const body = note.body || '';
+    // Match [[wikilinks]] — capture text before | or #
+    const re = /\[\[([^\]|#]+)/g;
+    let m;
+    while ((m = re.exec(body)) !== null) {
+      const target = m[1].trim().toLowerCase();
+      const tIdx = byName.get(target);
+      if (tIdx !== undefined && tIdx !== srcIdx) {
+        const key = [Math.min(srcIdx, tIdx), Math.max(srcIdx, tIdx)].join('-');
+        if (!edgeSet.has(key)) {
+          edgeSet.add(key);
+          edgeList.push({ source: srcIdx, target: tIdx });
+        }
+      }
+    }
+  });
+
+  return { nodes: nodeList, edges: edgeList };
+}
+
+const graph = buildGraph(allNotes);
+const noteCount = allNotes.length;
+---
+
+<Layout title="LiteASCII">
+  <Navigation client:load />
+
+  <main class="main">
+
+    <!-- ── Hero section (ASCII + Graph) ──────────────────────────────────── -->
+    <section class="hero">
+      <!-- Left: ASCII animation -->
+      <div class="hero-ascii">
+        <AsciiArt client:only="svelte" noteCount={noteCount} />
+      </div>
+
+      <!-- Right: Knowledge graph -->
+      <div class="hero-graph">
+        <ObsidianGraph
+          client:only="svelte"
+          nodes={graph.nodes}
+          edges={graph.edges}
+          size={280}
+        />
+      </div>
+    </section>
+
+    <!-- ── Recent notes ────────────────────────────────────────────────────── -->
+    <section class="notes-section" id="notes">
+      <div class="section-header">
+        <h2 class="section-title">Recent Notes</h2>
+        <a href="/notes" class="section-more">All notes →</a>
+      </div>
+
+      {noteCount === 0 ? (
+        <p class="empty-msg">
+          将 Obsidian 笔记放入 <code>src/content/</code> 即可显示
+        </p>
+      ) : (
+        <div class="notes-grid">
+          {recent.map(note => (
+            <PostCard
+              title={getTitle(note)}
+              href={'/notes/' + noteSlug(note)}
+              date={note.data.date}
+              description={note.data.description}
+              tags={note.data.tags}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .main {
+    padding-top: var(--nav-h);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  /* ── Hero ──────────────────────────────────────────────────────────────── */
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: center;
+    padding: 2.5rem 0 2rem;
+    min-height: 360px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  @media (max-width: 720px) {
+    .hero {
+      grid-template-columns: 1fr;
+      min-height: unset;
+    }
+    .hero-graph {
+      display: flex;
+      justify-content: center;
+    }
+  }
+
+  .hero-ascii {
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+  }
+
+  .hero-graph {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Notes section ────────────────────────────────────────────────────── */
+  .notes-section {
+    padding: 2.5rem 0 1rem;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+
+  .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .section-more {
+    font-size: 0.78rem;
+    color: var(--red);
+    font-family: 'Courier New', monospace;
+    transition: color 0.15s;
+  }
+  .section-more:hover { color: var(--red-2); }
+
+  .notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  .empty-msg {
+    font-size: 0.85rem;
+    color: var(--text-3);
+    padding: 2rem;
+    text-align: center;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+  }
+  .empty-msg code {
+    font-family: 'Courier New', monospace;
+    color: var(--red);
+    background: var(--red-faint);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+</style>

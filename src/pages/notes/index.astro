@@ -1,0 +1,115 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Navigation from '../../components/Navigation.svelte';
+import PostCard from '../../components/PostCard.astro';
+import Footer from '../../components/Footer.astro';
+import { getCollection } from 'astro:content';
+
+const allNotes = await getCollection('notes');
+
+function getTitle(note) {
+  if (note.data.title) return note.data.title;
+  const match = note.body?.match(/^#\s+(.+)/m);
+  if (match) return match[1].trim();
+  return note.id.replace(/\.md$/, '').split('/').pop() || 'Untitled';
+}
+
+function noteSlug(note) {
+  return note.id.replace(/\.md$/, '');
+}
+
+// Group by directory
+const groups = new Map();
+for (const note of allNotes) {
+  const folder = note.id.includes('/')
+    ? note.id.split('/').slice(0, -1).join('/')
+    : '根目录';
+  if (!groups.has(folder)) groups.set(folder, []);
+  groups.get(folder).push(note);
+}
+
+const groupEntries = [...groups.entries()].sort(([a], [b]) => a.localeCompare(b));
+---
+
+<Layout title="Notes · LiteASCII">
+  <Navigation client:load />
+
+  <main class="main">
+    <div class="page-header">
+      <h1 class="page-title">Notes</h1>
+      <p class="page-sub">{allNotes.length} 篇笔记 · Obsidian 知识库</p>
+    </div>
+
+    {groupEntries.map(([folder, notes]) => (
+      <section class="group">
+        <h2 class="group-name">
+          <span class="folder-icon">📁</span>
+          {folder}
+          <span class="group-count">{notes.length}</span>
+        </h2>
+        <div class="notes-grid">
+          {notes.map(note => (
+            <PostCard
+              title={getTitle(note)}
+              href={'/notes/' + noteSlug(note)}
+              date={note.data.date}
+              description={note.data.description}
+              tags={note.data.tags}
+            />
+          ))}
+        </div>
+      </section>
+    ))}
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .main {
+    padding-top: calc(var(--nav-h) + 2rem);
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-bottom: 2rem;
+  }
+
+  .page-header { margin-bottom: 2.5rem; }
+  .page-title { margin: 0 0 0.3rem; }
+  .page-sub {
+    font-size: 0.85rem;
+    color: var(--text-3);
+    font-family: 'Courier New', monospace;
+  }
+
+  .group { margin-bottom: 2.5rem; }
+
+  .group-name {
+    font-size: 0.85rem;
+    color: var(--text-2);
+    font-family: 'Courier New', monospace;
+    font-weight: 500;
+    margin: 0 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .folder-icon { font-size: 0.9rem; }
+
+  .group-count {
+    font-size: 0.7rem;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0 6px;
+    color: var(--text-3);
+  }
+
+  .notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0.75rem;
+  }
+</style>

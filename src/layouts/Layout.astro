@@ -1,0 +1,56 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'LiteASCII',
+  description = '探索知识的边界，连接思想的星图',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+
+    <!-- Pagefind UI (available after `pnpm build`) -->
+    <link rel="stylesheet" href="/_pagefind/pagefind-ui.css" />
+
+    <!-- Prevent flash of wrong theme: dark is default (no attr), light = data-theme="light" -->
+    <script is:inline>
+      (function () {
+        const stored = localStorage.getItem('theme');
+        if (stored === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+        // dark is default CSS :root — no attribute needed
+      })();
+    </script>
+  </head>
+  <body>
+    <slot />
+
+    <!-- Pagefind UI script (available after build) -->
+    <script is:inline>
+      // Only load pagefind in production build
+      window.__pagefind_ready = false;
+      fetch('/_pagefind/pagefind-ui.js').then(r => {
+        if (r.ok) {
+          const s = document.createElement('script');
+          s.src = '/_pagefind/pagefind-ui.js';
+          s.onload = () => { window.__pagefind_ready = true; };
+          document.head.appendChild(s);
+        }
+      }).catch(() => {});
+    </script>
+  </body>
+</html>

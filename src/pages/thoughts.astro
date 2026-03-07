@@ -1,0 +1,176 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navigation from '../components/Navigation.svelte';
+import Footer from '../components/Footer.astro';
+import { getCollection } from 'astro:content';
+
+// Filter notes tagged with 'thoughts' or in a thoughts folder
+const allNotes = await getCollection('notes');
+
+function getTitle(note) {
+  if (note.data.title) return note.data.title;
+  const match = note.body?.match(/^#\s+(.+)/m);
+  if (match) return match[1].trim();
+  return note.id.replace(/\.md$/, '').split('/').pop() || 'Untitled';
+}
+
+function noteSlug(note) {
+  return note.id.replace(/\.md$/, '');
+}
+
+const thoughts = allNotes.filter(n =>
+  n.data.tags?.some(t => t.toLowerCase().includes('thought')) ||
+  n.id.toLowerCase().includes('thought')
+);
+
+const recent = allNotes
+  .sort((a, b) => {
+    const da = a.data.date ? new Date(a.data.date).getTime() : 0;
+    const db = b.data.date ? new Date(b.data.date).getTime() : 0;
+    return db - da;
+  })
+  .slice(0, 8);
+
+const displayNotes = thoughts.length > 0 ? thoughts : recent;
+---
+
+<Layout title="Thoughts · LiteASCII">
+  <Navigation client:load />
+
+  <main class="main">
+    <div class="page-header">
+      <h1 class="page-title">Thoughts</h1>
+      <p class="page-sub">
+        {thoughts.length > 0
+          ? `${thoughts.length} 篇随想 · 标签: thoughts`
+          : `最近的 ${displayNotes.length} 篇笔记`}
+      </p>
+    </div>
+
+    <div class="notes-list">
+      {displayNotes.map(note => {
+        const date = note.data.date ? new Date(note.data.date) : null;
+        return (
+          <article class="note-row">
+            <a href={'/notes/' + noteSlug(note)} class="note-row-link">
+              <div class="note-row-left">
+                {date && (
+                  <time class="row-date">
+                    {date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                  </time>
+                )}
+                <h3 class="row-title">{getTitle(note)}</h3>
+                {note.data.description && (
+                  <p class="row-desc">{note.data.description}</p>
+                )}
+              </div>
+              <span class="row-arrow">→</span>
+            </a>
+          </article>
+        );
+      })}
+
+      {displayNotes.length === 0 && (
+        <p class="empty-msg">暂无随想笔记。为笔记添加 <code>tags: [thoughts]</code> 标签即可显示。</p>
+      )}
+    </div>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .main {
+    padding-top: calc(var(--nav-h) + 2rem);
+    max-width: 760px;
+    margin: 0 auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-bottom: 3rem;
+  }
+  .page-header { margin-bottom: 2rem; }
+  .page-title { margin: 0 0 0.3rem; }
+  .page-sub {
+    font-size: 0.82rem;
+    color: var(--text-3);
+    font-family: 'Courier New', monospace;
+  }
+
+  .notes-list { display: flex; flex-direction: column; }
+
+  .note-row {
+    border-bottom: 1px solid var(--border);
+  }
+  .note-row:first-child { border-top: 1px solid var(--border); }
+
+  .note-row-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0.5rem;
+    gap: 1rem;
+    color: inherit;
+    transition: background 0.15s;
+    border-radius: 4px;
+  }
+  .note-row-link:hover { background: var(--red-faint); }
+
+  .note-row-left { flex: 1; min-width: 0; }
+
+  .row-date {
+    font-size: 0.7rem;
+    color: var(--text-3);
+    font-family: 'Courier New', monospace;
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+
+  .row-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 0.25rem;
+    transition: color 0.15s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .note-row-link:hover .row-title { color: var(--red); }
+
+  .row-desc {
+    font-size: 0.78rem;
+    color: var(--text-2);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .row-arrow {
+    font-size: 0.8rem;
+    color: var(--text-3);
+    flex-shrink: 0;
+    transition: color 0.15s, transform 0.15s;
+  }
+  .note-row-link:hover .row-arrow {
+    color: var(--red);
+    transform: translateX(3px);
+  }
+
+  .empty-msg {
+    font-size: 0.85rem;
+    color: var(--text-3);
+    padding: 2rem;
+    text-align: center;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    margin-top: 1rem;
+  }
+  .empty-msg code {
+    font-family: 'Courier New', monospace;
+    color: var(--red);
+    background: var(--red-faint);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+</style>

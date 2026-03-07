@@ -1,0 +1,296 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navigation from '../components/Navigation.svelte';
+import Footer from '../components/Footer.astro';
+import { getCollection } from 'astro:content';
+
+const allNotes = await getCollection('notes');
+
+function getTitle(note) {
+  if (note.data.title) return note.data.title;
+  const match = note.body?.match(/^#\s+(.+)/m);
+  if (match) return match[1].trim();
+  return note.id.replace(/\.md$/, '').split('/').pop() || 'Untitled';
+}
+
+function noteSlug(note) {
+  return note.id.replace(/\.md$/, '');
+}
+
+// Notes with dates go in the timeline
+const datedNotes = allNotes
+  .filter(n => n.data.date)
+  .sort((a, b) => new Date(b.data.date!).getTime() - new Date(a.data.date!).getTime());
+
+// Notes without dates shown in "undated" section
+const undatedNotes = allNotes
+  .filter(n => !n.data.date)
+  .sort((a, b) => getTitle(a).localeCompare(getTitle(b)));
+
+// Group dated notes by year
+const byYear = new Map<number, typeof datedNotes>();
+for (const note of datedNotes) {
+  const year = new Date(note.data.date!).getFullYear();
+  if (!byYear.has(year)) byYear.set(year, []);
+  byYear.get(year)!.push(note);
+}
+const years = [...byYear.keys()].sort((a, b) => b - a);
+---
+
+<Layout title="Timeline · LiteASCII">
+  <Navigation client:load />
+
+  <main class="main">
+    <div class="page-header">
+      <h1 class="page-title">Timeline</h1>
+      <p class="page-sub">知识积累的时间轴 · A chronological map of ideas</p>
+    </div>
+
+    <!-- Dated notes grouped by year -->
+    {years.length > 0 && (
+      <div class="timeline">
+        {years.map(year => (
+          <section class="year-group">
+            <div class="year-label">{year}</div>
+            <div class="year-items">
+              {byYear.get(year)!.map(note => {
+                const date = new Date(note.data.date!);
+                const href = '/notes/' + noteSlug(note);
+                return (
+                  <article class="timeline-item">
+                    <div class="item-dot"></div>
+                    <div class="item-line"></div>
+                    <div class="item-content">
+                      <div class="item-meta">
+                        <time class="item-date">
+                          {date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
+                        </time>
+                        {note.data.tags && note.data.tags[0] && (
+                          <span class="item-tag">{note.data.tags[0]}</span>
+                        )}
+                      </div>
+                      <a href={href} class="item-link">
+                        <h3 class="item-title">{getTitle(note)}</h3>
+                        {note.data.description && (
+                          <p class="item-desc">{note.data.description}</p>
+                        )}
+                        <span class="item-read">阅读 →</span>
+                      </a>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
+    )}
+
+    <!-- Undated notes -->
+    {undatedNotes.length > 0 && (
+      <section class="undated-section">
+        <h2 class="undated-title">未标日期的笔记</h2>
+        <div class="undated-grid">
+          {undatedNotes.map(note => (
+            <a href={'/notes/' + noteSlug(note)} class="undated-item">
+              <span class="undated-name">{getTitle(note)}</span>
+              <span class="undated-folder">
+                {note.id.includes('/') ? note.id.split('/').slice(0, -1).join('/') : ''}
+              </span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {allNotes.length === 0 && (
+      <p class="empty-msg">尚无笔记。将 Obsidian 文件放入 <code>src/content/</code> 开始。</p>
+    )}
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .main {
+    padding-top: calc(var(--nav-h) + 2rem);
+    max-width: 860px;
+    margin: 0 auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-bottom: 3rem;
+  }
+
+  .page-header { margin-bottom: 2.5rem; }
+  .page-title { margin: 0 0 0.3rem; }
+  .page-sub {
+    font-size: 0.82rem;
+    color: var(--text-3);
+    font-family: 'Courier New', monospace;
+  }
+
+  /* ── Timeline ──────────────────────────────────────────────────────────── */
+  .timeline { margin-bottom: 3rem; }
+
+  .year-group { margin-bottom: 2rem; }
+
+  .year-label {
+    font-size: 0.82rem;
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+  }
+
+  .year-items { padding-left: 1.25rem; }
+
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 10px 1px 1fr;
+    gap: 0 0.75rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+  }
+
+  .item-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+    margin-top: 0.45rem;
+    flex-shrink: 0;
+  }
+
+  .item-line {
+    background: var(--border);
+    margin-top: 1rem;
+    width: 1px;
+    align-self: stretch;
+  }
+
+  .item-content { padding-bottom: 0.5rem; }
+
+  .item-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .item-date {
+    font-size: 0.72rem;
+    color: var(--text-3);
+    font-family: 'Courier New', monospace;
+  }
+
+  .item-tag {
+    font-size: 0.65rem;
+    color: var(--red);
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .item-link {
+    display: block;
+    padding: 0.75rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: border-color 0.15s, transform 0.15s;
+    color: inherit;
+  }
+  .item-link:hover {
+    border-color: var(--red);
+    transform: translateX(3px);
+  }
+
+  .item-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 0.3rem;
+    color: var(--text);
+    transition: color 0.15s;
+    line-height: 1.4;
+  }
+  .item-link:hover .item-title { color: var(--red); }
+
+  .item-desc {
+    font-size: 0.8rem;
+    color: var(--text-2);
+    margin: 0 0 0.4rem;
+    line-height: 1.5;
+  }
+
+  .item-read {
+    font-size: 0.72rem;
+    color: var(--red);
+    font-family: 'Courier New', monospace;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .item-link:hover .item-read { opacity: 1; }
+
+  /* ── Undated section ────────────────────────────────────────────────────── */
+  .undated-section {
+    border-top: 1px solid var(--border);
+    padding-top: 2rem;
+  }
+
+  .undated-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-2);
+    margin: 0 0 1rem;
+  }
+
+  .undated-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .undated-item {
+    display: flex;
+    flex-direction: column;
+    padding: 0.6rem 0.8rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    transition: border-color 0.15s;
+    color: inherit;
+  }
+  .undated-item:hover { border-color: var(--red); }
+
+  .undated-name {
+    font-size: 0.82rem;
+    color: var(--text);
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+  .undated-item:hover .undated-name { color: var(--red); }
+
+  .undated-folder {
+    font-size: 0.65rem;
+    color: var(--text-3);
+    font-family: 'Courier New', monospace;
+    margin-top: 0.15rem;
+  }
+
+  /* ── Empty ─────────────────────────────────────────────────────────────── */
+  .empty-msg {
+    font-size: 0.85rem;
+    color: var(--text-3);
+    padding: 2rem;
+    text-align: center;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+  }
+  .empty-msg code {
+    font-family: 'Courier New', monospace;
+    color: var(--red);
+    background: var(--red-faint);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+</style>

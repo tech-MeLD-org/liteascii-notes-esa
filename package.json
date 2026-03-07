@@ -1,0 +1,47 @@
+{
+  "name": "lite-ascii",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && pagefind --site dist",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/svelte": "^7.2.5",
+    "@tailwindcss/vite": "^4.2.1",
+    "astro": "^5.2.5",
+    "d3-drag": "^3.0.0",
+    "d3-force": "^3.0.0",
+    "d3-selection": "^3.0.0",
+    "d3-zoom": "^3.0.0",
+    "svelte": "^5.53.6",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.5",
+    "pagefind": "^1.4.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ]
+  },
+  "description": "> 红黑简约风格，ASCII 动画 + Obsidian 关系图谱 + 全文搜索。 > 基于 **Astro 5 · Svelte 5 · Tailwind CSS v4** 构建。",
+  "main": "svelte.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tech-MeLD/LiteASCII.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tech-MeLD/LiteASCII/issues"
+  },
+  "homepage": "https://github.com/tech-MeLD/LiteASCII#readme"
+}
