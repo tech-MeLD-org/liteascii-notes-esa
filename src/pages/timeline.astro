@@ -4,10 +4,8 @@ import Navigation from '../components/Navigation.svelte';
 import Footer from '../components/Footer.astro';
 import { getCollection } from 'astro:content';
 
+// 1. 获取所有笔记并排除带有 'thoughts' 标签的内容
 const rawNotes = await getCollection('notes');
-
-// 【核心修改】：过滤掉所有包含 'thoughts' 标签的笔记
-// 这里使用了安全的 optional chaining (?.) 来防止没有 tags 的笔记报错
 const allNotes = rawNotes.filter(n => 
   !n.data.tags?.some(t => t.toLowerCase() === 'thoughts')
 );
@@ -23,17 +21,17 @@ function noteSlug(note) {
   return note.id.replace(/\.md$/, '');
 }
 
-// Notes with dates go in the timeline
+// 有日期的笔记用于时间轴
 const datedNotes = allNotes
   .filter(n => n.data.date)
   .sort((a, b) => new Date(b.data.date!).getTime() - new Date(a.data.date!).getTime());
 
-// Notes without dates shown in "undated" section
+// 无日期的笔记显示在底部
 const undatedNotes = allNotes
   .filter(n => !n.data.date)
   .sort((a, b) => getTitle(a).localeCompare(getTitle(b)));
 
-// Group dated notes by year
+// 按年份分组
 const byYear = new Map<number, typeof datedNotes>();
 for (const note of datedNotes) {
   const year = new Date(note.data.date!).getFullYear();
@@ -70,10 +68,16 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
                         <time class="item-date">
                           {date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
                         </time>
-                        {note.data.tags && note.data.tags[0] && (
-                          <span class="item-tag">{note.data.tags[0]}</span>
+                        
+                        {note.data.tags && (
+                          <div class="item-tags-container">
+                            {note.data.tags.map(tag => (
+                              <span class="item-tag">{tag}</span>
+                            ))}
+                          </div>
                         )}
                       </div>
+                      
                       <a href={href} class="item-link">
                         <h3 class="item-title">{getTitle(note)}</h3>
                         {note.data.description && (
@@ -99,7 +103,7 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
             <a href={'/notes/' + noteSlug(note)} class="undated-item">
               <span class="undated-name">{getTitle(note)}</span>
               <span class="undated-folder">
-                {note.id.includes('/') ? note.id.split('/').slice(0, -1).join('/') : ''}
+                {note.id.includes('/') ? note.id.split('/').slice(0, -1).join('/') : 'root'}
               </span>
             </a>
           ))}
@@ -108,7 +112,7 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
     )}
 
     {allNotes.length === 0 && (
-      <p class="empty-msg">除随想外，尚无其他笔记。将 Obsidian 文件放入 <code>src/content/</code> 开始。</p>
+      <p class="empty-msg">尚无除随想外的笔记。请在 <code>src/content/notes/</code> 中添加文档。</p>
     )}
   </main>
 
@@ -116,7 +120,6 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
 </Layout>
 
 <style>
-  
   .main {
     padding-top: calc(var(--nav-h) + 2rem);
     max-width: 860px;
@@ -136,9 +139,7 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
 
   /* ── Timeline ──────────────────────────────────────────────────────────── */
   .timeline { margin-bottom: 3rem; }
-
   .year-group { margin-bottom: 2rem; }
-
   .year-label {
     font-size: 0.82rem;
     font-family: 'Courier New', monospace;
@@ -164,6 +165,7 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
     background: var(--red);
     margin-top: 0.45rem;
     flex-shrink: 0;
+    z-index: 2;
   }
 
   .item-line {
@@ -178,8 +180,9 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
   .item-meta {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 0.3rem;
+    gap: 0.8rem;
+    margin-bottom: 0.4rem;
+    flex-wrap: wrap;
   }
 
   .item-date {
@@ -188,34 +191,43 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
     font-family: 'Courier New', monospace;
   }
 
+  /* 标签容器及样式 */
+  .item-tags-container {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
   .item-tag {
     font-size: 0.65rem;
     color: var(--red);
     font-family: 'Courier New', monospace;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    background: var(--red-faint);
+    padding: 1px 4px;
+    border-radius: 2px;
   }
 
   .item-link {
     display: block;
     padding: 0.75rem 1rem;
-    background: var(--bg-card);
+    background: var(--bg-card, #1a1a1a);
     border: 1px solid var(--border);
     border-radius: 6px;
-    transition: border-color 0.15s, transform 0.15s;
+    transition: all 0.2s ease;
     color: inherit;
+    text-decoration: none;
   }
   .item-link:hover {
     border-color: var(--red);
-    transform: translateX(3px);
+    transform: translateX(4px);
   }
 
   .item-title {
     font-size: 0.95rem;
     font-weight: 600;
     margin: 0 0 0.3rem;
-    color: var(--text);
-    transition: color 0.15s;
     line-height: 1.4;
   }
   .item-link:hover .item-title { color: var(--red); }
@@ -223,7 +235,7 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
   .item-desc {
     font-size: 0.8rem;
     color: var(--text-2);
-    margin: 0 0 0.4rem;
+    margin: 0 0 0.5rem;
     line-height: 1.5;
   }
 
@@ -232,7 +244,7 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
     color: var(--red);
     font-family: 'Courier New', monospace;
     opacity: 0;
-    transition: opacity 0.15s;
+    transition: opacity 0.2s;
   }
   .item-link:hover .item-read { opacity: 1; }
 
@@ -241,61 +253,38 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
     border-top: 1px solid var(--border);
     padding-top: 2rem;
   }
-
   .undated-title {
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-2);
     margin: 0 0 1rem;
   }
-
   .undated-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 0.5rem;
+    gap: 0.6rem;
   }
-
   .undated-item {
     display: flex;
     flex-direction: column;
-    padding: 0.6rem 0.8rem;
+    padding: 0.8rem;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 5px;
-    transition: border-color 0.15s;
+    transition: border-color 0.2s;
     color: inherit;
+    text-decoration: none;
   }
   .undated-item:hover { border-color: var(--red); }
+  .undated-name { font-size: 0.85rem; font-weight: 500; }
+  .undated-folder { font-size: 0.65rem; color: var(--text-3); margin-top: 0.3rem; }
 
-  .undated-name {
-    font-size: 0.82rem;
-    color: var(--text);
-    font-weight: 500;
-    transition: color 0.15s;
-  }
-  .undated-item:hover .undated-name { color: var(--red); }
-
-  .undated-folder {
-    font-size: 0.65rem;
-    color: var(--text-3);
-    font-family: 'Courier New', monospace;
-    margin-top: 0.15rem;
-  }
-
-  /* ── Empty ─────────────────────────────────────────────────────────────── */
   .empty-msg {
     font-size: 0.85rem;
     color: var(--text-3);
-    padding: 2rem;
+    padding: 3rem;
     text-align: center;
     border: 1px dashed var(--border);
-    border-radius: 6px;
-  }
-  .empty-msg code {
-    font-family: 'Courier New', monospace;
-    color: var(--red);
-    background: var(--red-faint);
-    padding: 1px 5px;
-    border-radius: 3px;
+    border-radius: 8px;
   }
 </style>
