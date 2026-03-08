@@ -6,9 +6,11 @@ import ObsidianGraph from '../components/ObsidianGraph.svelte';
 import PostCard from '../components/PostCard.astro';
 import Footer from '../components/Footer.astro';
 import { getCollection } from 'astro:content';
-
+// src/pages/index.astro 的脚本部分
+import path from 'node:path'; // 必须引入 path 模块处理 Windows/Mac 路径兼容
 // ── Load notes ─────────────────────────────────────────────────────────────
 const allNotes = await getCollection('notes');
+console.log("第一篇笔记的 ID 是:", allNotes[0]?.id);
 
 // Sort by date if available, else by title
 const sorted = [...allNotes].sort((a, b) => {
@@ -37,43 +39,77 @@ function buildGraph(notes) {
   const nodeList = notes.map((note, i) => ({
     id: i,
     label: getTitle(note),
-    href: '/notes/' + noteSlug(note),
+    href: '/notes/' + note.id.replace(/\.md$/, ''),
   }));
 
-  // Index by filename (without extension, case-insensitive)
-  const byName = new Map();
-  notes.forEach((note, i) => {
-    const name = (note.id.replace(/\.md$/, '').split('/').pop() || '').toLowerCase();
-    byName.set(name, i);
+  // 1. 建立“纯净文件名”到索引的映射
+  const nameToIndex = new Map();
+  notes.forEach((n, i) => {
+    // n.id 类似: "200-pc中的指令/24-git/243-git连接github"
+    // 只取最后的文件名部分作为匹配钥匙
+    const baseName = n.id.split('/').pop();
+    nameToIndex.set(baseName, i);
   });
-
-  const edgeSet = new Set();
+  
   const edgeList = [];
+  const edgeSet = new Set();
+  let linkCount = 0;
 
   notes.forEach((note, srcIdx) => {
-    const body = note.body || '';
-    // Match [[wikilinks]] — capture text before | or #
-    const re = /\[\[([^\]|#]+)/g;
-    let m;
-    while ((m = re.exec(body)) !== null) {
-      const target = m[1].trim().toLowerCase();
-      const tIdx = byName.get(target);
-      if (tIdx !== undefined && tIdx !== srcIdx) {
-        const key = [Math.min(srcIdx, tIdx), Math.max(srcIdx, tIdx)].join('-');
-        if (!edgeSet.has(key)) {
-          edgeSet.add(key);
-          edgeList.push({ source: srcIdx, target: tIdx });
+    if (!note.body) return;
+    
+    // 正则：匹配 [text](path)
+    const mdLinkRegex = /\[(.*?)\]\((.*?)\)/g;
+    
+    let match;
+    while ((match = mdLinkRegex.exec(note.body)) !== null) {
+      let urlTarget = match[2].split('#')[0]; // 砍掉锚点
+      
+      // 过滤掉网络链接
+      if (!urlTarget || urlTarget.startsWith('http') || urlTarget.startsWith('mailto:')) continue;
+      
+      // 【关键修复 1】：强力过滤图片和附件
+      if (urlTarget.match(/\.(png|jpg|jpeg|gif|svg|webp|bmp|pdf|zip|rar)$/i)) continue;
+
+      // 【关键修复 2】：提取并净化文件名，与 Astro 的 ID 格式对齐
+      // 提取链接的最后一部分（文件名）
+      const rawFileName = urlTarget.split('/').pop(); 
+      
+      let cleanName;
+      try {
+        cleanName = decodeURIComponent(rawFileName); // 将 %20 变回空格
+      } catch (e) {
+        cleanName = rawFileName;
+      }
+
+      // 模拟 Astro 的格式化规则：转小写 -> 去掉 .md -> 去掉所有点 -> 空格变横杠
+      cleanName = cleanName.toLowerCase()
+        .replace(/\.md$/, '')
+        .replace(/\./g, '')    // 解决 2.4.3 变成 243 的问题
+        .replace(/\s+/g, '-')  // 解决空格变成横杠的问题
+        .trim();
+
+      const targetIdx = nameToIndex.get(cleanName);
+
+      if (targetIdx !== undefined && targetIdx !== srcIdx) {
+        linkCount++;
+        const edgeKey = [Math.min(srcIdx, targetIdx), Math.max(srcIdx, targetIdx)].join('-');
+        if (!edgeSet.has(edgeKey)) {
+          edgeSet.add(edgeKey);
+          edgeList.push({ source: srcIdx, target: targetIdx });
         }
       }
     }
   });
 
+  console.log(`[Graph Success] 节点总数: ${nodeList.length}, 成功连线数: ${edgeList.length}`);
   return { nodes: nodeList, edges: edgeList };
 }
 
 const graph = buildGraph(allNotes);
 const noteCount = allNotes.length;
 ---
+
 
 <Layout title="LiteASCII">
   <Navigation client:load />
