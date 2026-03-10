@@ -126,12 +126,22 @@
 
   .folder-label, .tree-file { 
     display: flex; align-items: center; padding: 0.35rem 0.6rem; 
-    font-size: 0.82rem; color: var(--text-3); border-radius: 4px; 
+    font-size: 0.82rem; border-radius: 4px; 
     text-decoration: none; cursor: pointer;
   }
   
+  /* 文件夹保持原来的颜色 */
+  .folder-label {
+    color: var(--text-3);
+  }
+  
+  /* 文档文件更亮一些，方便区分 */
+  .tree-file {
+    color: var(--text-2);
+  }
+  
   .folder-label, .file-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
-  .folder-label:hover, .tree-file:hover { background: var(--bg-2); color: var(--text-2); }
+  .folder-label:hover, .tree-file:hover { background: var(--bg-2); color: var(--text); }
   .tree-file.active { background: var(--red-faint); color: var(--red); font-weight: 600; }
   
   .folder-label { padding-left: calc(var(--depth) * 0.8rem + 0.5rem); font-weight: 500; }

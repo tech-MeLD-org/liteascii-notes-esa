@@ -1,0 +1,124 @@
+---
+// Map 页面 - 知识图谱可视化
+// 展示目录结构图谱和文档引用关系图
+import Layout from '../layouts/Layout.astro';
+import Navigation from '../components/Navigation.svelte';
+import Footer from '../components/Footer.astro';
+import ObsidianGraph from '../components/ObsidianGraph.svelte';
+import DirectoryGraph from '../components/DirectoryGraph.svelte';
+import { getCollection } from 'astro:content';
+
+// 导入中心化逻辑
+import { isVisibleNote, buildDirectoryTree, buildReferenceGraph } from '../utils/note-logic';
+
+const allNotes = await getCollection('notes');
+const validNotes = allNotes.filter(isVisibleNote);
+
+// 直接调用工具函数获取数据
+const dirTreeData = buildDirectoryTree(validNotes);
+const refGraphData = buildReferenceGraph(validNotes);
+---
+
+<Layout title="Knowledge Atlas · LiteASCII">
+  <Navigation client:load />
+
+  <main class="atlas-main">
+    <header class="atlas-header">
+      <h1>Knowledge Atlas</h1>
+      <p>探索层级结构与思维关联</p>
+    </header>
+
+    <div class="atlas-container">
+      <section class="dir-panel">
+        <DirectoryGraph client:only="svelte" data={dirTreeData} />
+      </section>
+
+      <aside class="ref-panel">
+        <div class="graph-inner">
+          <ObsidianGraph 
+            client:only="svelte" 
+            nodes={refGraphData.nodes} 
+            edges={refGraphData.edges} 
+            size={280} 
+          />
+        </div>
+        <span class="panel-label">REFERENCE GRAPH</span>
+      </aside>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .atlas-main {
+    padding-top: var(--nav-h);
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-inline: 1.5rem;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .atlas-header {
+    padding: 2rem 0;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .atlas-container {
+    display: flex;
+    gap: 1.25rem;
+    flex: 1;
+    min-height: 0; /* 关键：防止 Flex 子项溢出 */
+    margin-bottom: 2rem;
+  }
+
+  /* 中间目录图谱：自适应 */
+  .dir-panel {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--bg-card);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* 右侧引用图谱：固定宽度 320px */
+  .ref-panel {
+    width: 320px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--bg-card);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem;
+  }
+
+  .graph-inner {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .panel-label {
+    margin-top: 1rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--text-3);
+    font-family: 'Courier New', monospace;
+  }
+
+  /* 移动端适配 */
+  @media (max-width: 960px) {
+    .atlas-container { flex-direction: column; height: auto; }
+    .dir-panel { height: 500px; }
+    .ref-panel { width: 100%; height: 320px; }
+  }
+</style>

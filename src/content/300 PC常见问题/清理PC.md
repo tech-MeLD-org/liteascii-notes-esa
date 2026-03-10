@@ -1,4 +1,10 @@
-
+---
+title: obsasdf         # 不填则自动取正文第一个 # 标题
+date: 2026-02-12         # 用于 Timeline 排序
+description:  obsidiaasdf总  # 用于卡片摘要
+tags: [obsidian,linux,windows]     # 用于标签和 Thoughts 筛选
+category: asdgsgasg
+---
 # 清理个人文件
 
 ## Windows

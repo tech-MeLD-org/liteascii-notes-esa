@@ -40,16 +40,24 @@ const filteredHeadings = headings.filter(h => h.depth >= 1 && h.depth <= 3);
         <article class="prose">
           <header class="note-header">
             <a href="/" class="back-link">← BACK</a>
-            <div class="note-meta">
-              {dateStr && <time class="meta-date">{dateStr}</time>}
-              {category && <span class="meta-category">{category}</span>}
-            </div>
+            {dateStr && <time class="meta-date">{dateStr}</time>}
             <h1 class="note-title">{title}</h1>
-            {tags.length > 0 && (
-              <div class="note-tags">
-                {tags.map(tag => <span class="note-tag">#{tag}</span>)}
-              </div>
-            )}
+            
+            <!-- Category 和 Tags 同一排显示，都可点击 -->
+            <div class="card-footer-meta">
+              {category && (
+                <a href={`/category/${category}`} class="pill-category">
+                  {category}
+                </a>
+              )}
+              {tags.length > 0 && (
+                <div class="pill-tags-group">
+                  {tags.map(tag => (
+                    <a href={`/tags/${tag}`} class="pill-tag">#{tag}</a>
+                  ))}
+                </div>
+              )}
+            </div>
           </header>
 
           <section class="markdown-body">
@@ -154,9 +162,15 @@ const filteredHeadings = headings.filter(h => h.depth >= 1 && h.depth <= 3);
   .toc-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* 阶梯缩进 */
-  .d-1 { font-size: 0.82rem; font-weight: 500; padding-left: 0.8rem; }
-  .d-2 { font-size: 0.78rem; padding-left: 1.6rem; opacity: 0.55; }
-  .d-3 { font-size: 0.75rem; padding-left: 2.4rem; opacity: 0.45; }
+  .d-1 { 
+    font-size: 0.82rem; 
+    font-weight: 400; 
+    padding-left: 0.8rem; 
+    color: var(--text-2);
+    opacity: 0.75;
+  }
+  .d-2 { font-size: 0.78rem; padding-left: 1.6rem; opacity: 0.65; }
+  .d-3 { font-size: 0.75rem; padding-left: 2.4rem; opacity: 0.55; }
 
   .toc-item:hover { background: var(--bg-2); color: var(--text-2); opacity: 1; }
   
@@ -165,13 +179,70 @@ const filteredHeadings = headings.filter(h => h.depth >= 1 && h.depth <= 3);
     background: var(--red-faint); color: var(--red); font-weight: 600; opacity: 1;
   }
 
+  /* 正文一级标题为红色 */
+  :global(.markdown-body h1) {
+    color: var(--red);
+  }
+
   /* ── 其他样式 ── */
   .note-header { margin-bottom: 3.5rem; padding-bottom: 2rem; border-bottom: 1px dashed var(--border); }
   .back-link { font-size: 0.75rem; color: var(--text-3); text-decoration: none; margin-bottom: 1.5rem; display: inline-block; opacity: 0.7; }
+  
+  .meta-date { 
+    font-family: 'Courier New', monospace; 
+    font-size: 0.75rem; 
+    color: var(--text-3); 
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  
+  .note-title { 
+    font-size: 2.8rem; 
+    font-weight: 850; 
+    line-height: 1.15; 
+    margin: 0 0 1.2rem; 
+  }
+
+  /* Category 和 Tags 同一排显示 - 与 postcard 样式一致 */
+  .card-footer-meta { 
+    display: flex; 
+    align-items: center; 
+    gap: 0.8rem; 
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+
+  /* 分类 Pill - 与 postcard 一致 */
+  .pill-category {
+    font-size: 0.7rem; 
+    font-weight: 600; 
+    color: #ff5e4d;
+    background: rgba(255, 94, 77, 0.08);
+    padding: 0.2rem 0.6rem; 
+    border-radius: 4px;
+    text-decoration: none; 
+    font-family: 'Courier New', monospace;
+    transition: all 0.2s;
+  }
+  .pill-category:hover { background: rgba(255, 94, 77, 0.15); }
+
+  /* 标签 Pill - 与 postcard 一致 */
+  .pill-tags-group { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .pill-tag {
+    font-size: 0.7rem; 
+    color: var(--text-2); 
+    background: var(--bg-2);
+    padding: 0.15rem 0.5rem; 
+    border-radius: 4px;
+    font-family: 'Courier New', monospace; 
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .pill-tag:hover { background: var(--border); color: var(--text); }
+
+  /* 保留旧样式兼容性 */
   .note-meta { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.8rem; }
-  .meta-date { font-family: 'Courier New', monospace; font-size: 0.75rem; color: var(--text-3); }
-  .meta-category { font-family: 'Courier New', monospace; font-size: 0.72rem; color: var(--red); font-weight: 600; text-transform: uppercase; }
-  .note-title { font-size: 2.8rem; font-weight: 850; line-height: 1.15; margin: 0 0 1.2rem; }
+  .meta-category-old { font-family: 'Courier New', monospace; font-size: 0.72rem; color: var(--red); font-weight: 600; text-transform: uppercase; }
   .note-tag { font-size: 0.75rem; color: var(--red); background: var(--red-faint); padding: 0.15rem 0.5rem; border-radius: 3px; font-family: 'Courier New', monospace; margin-right: 0.5rem; }
 
   @media (max-width: 1200px) { .toc-column { display: none; } }
