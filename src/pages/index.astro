@@ -6,13 +6,10 @@ import ObsidianGraph from '../components/ObsidianGraph.svelte';
 import PostCard from '../components/PostCard.astro';
 import Footer from '../components/Footer.astro';
 import { getCollection } from 'astro:content';
-// src/pages/index.astro 的脚本部分
-import path from 'node:path'; // 必须引入 path 模块处理 Windows/Mac 路径兼容
-// ── Load notes ─────────────────────────────────────────────────────────────
-const allNotes = await getCollection('notes');
-console.log("第一篇笔记的 ID 是:", allNotes[0]?.id);
+import path from 'node:path';
 
-// Sort by date if available, else by title
+const allNotes = await getCollection('notes');
+
 const sorted = [...allNotes].sort((a, b) => {
   const da = a.data.date ? new Date(a.data.date).getTime() : 0;
   const db = b.data.date ? new Date(b.data.date).getTime() : 0;
@@ -21,7 +18,6 @@ const sorted = [...allNotes].sort((a, b) => {
 
 const recent = sorted.slice(0, 6);
 
-// ── Extract title from note body (first # heading or filename) ─────────────
 function getTitle(note) {
   if (note.data.title) return note.data.title;
   const match = note.body?.match(/^#\s+(.+)/m);
@@ -29,27 +25,15 @@ function getTitle(note) {
   return note.id.replace(/\.md$/, '').split('/').pop() || 'Untitled';
 }
 
-// ── Build note slug for URL ─────────────────────────────────────────────────
-function noteSlug(note) {
-  return note.id.replace(/\.md$/, '');
-}
+function noteSlug(note) { return note.id.replace(/\.md$/, ''); }
 
-// ── Build knowledge graph from real content links ──────────────────────────
 function buildGraph(notes) {
   const nodeList = notes.map((note, i) => ({
-    id: i,
-    label: getTitle(note),
-    href: '/notes/' + note.id.replace(/\.md$/, ''),
+    id: i, label: getTitle(note), href: '/notes/' + note.id.replace(/\.md$/, ''),
   }));
 
-  // 1. 建立“纯净文件名”到索引的映射
   const nameToIndex = new Map();
-  notes.forEach((n, i) => {
-    // n.id 类似: "200-pc中的指令/24-git/243-git连接github"
-    // 只取最后的文件名部分作为匹配钥匙
-    const baseName = n.id.split('/').pop();
-    nameToIndex.set(baseName, i);
-  });
+  notes.forEach((n, i) => { nameToIndex.set(n.id.split('/').pop(), i); });
   
   const edgeList = [];
   const edgeSet = new Set();
@@ -57,52 +41,27 @@ function buildGraph(notes) {
 
   notes.forEach((note, srcIdx) => {
     if (!note.body) return;
-    
-    // 正则：匹配 [text](path)
     const mdLinkRegex = /\[(.*?)\]\((.*?)\)/g;
-    
     let match;
     while ((match = mdLinkRegex.exec(note.body)) !== null) {
-      let urlTarget = match[2].split('#')[0]; // 砍掉锚点
-      
-      // 过滤掉网络链接
+      let urlTarget = match[2].split('#')[0];
       if (!urlTarget || urlTarget.startsWith('http') || urlTarget.startsWith('mailto:')) continue;
-      
-      // 【关键修复 1】：强力过滤图片和附件
       if (urlTarget.match(/\.(png|jpg|jpeg|gif|svg|webp|bmp|pdf|zip|rar)$/i)) continue;
 
-      // 【关键修复 2】：提取并净化文件名，与 Astro 的 ID 格式对齐
-      // 提取链接的最后一部分（文件名）
       const rawFileName = urlTarget.split('/').pop(); 
-      
       let cleanName;
-      try {
-        cleanName = decodeURIComponent(rawFileName); // 将 %20 变回空格
-      } catch (e) {
-        cleanName = rawFileName;
-      }
+      try { cleanName = decodeURIComponent(rawFileName); } catch (e) { cleanName = rawFileName; }
 
-      // 模拟 Astro 的格式化规则：转小写 -> 去掉 .md -> 去掉所有点 -> 空格变横杠
-      cleanName = cleanName.toLowerCase()
-        .replace(/\.md$/, '')
-        .replace(/\./g, '')    // 解决 2.4.3 变成 243 的问题
-        .replace(/\s+/g, '-')  // 解决空格变成横杠的问题
-        .trim();
-
+      cleanName = cleanName.toLowerCase().replace(/\.md$/, '').replace(/\./g, '').replace(/\s+/g, '-').trim();
       const targetIdx = nameToIndex.get(cleanName);
 
       if (targetIdx !== undefined && targetIdx !== srcIdx) {
         linkCount++;
         const edgeKey = [Math.min(srcIdx, targetIdx), Math.max(srcIdx, targetIdx)].join('-');
-        if (!edgeSet.has(edgeKey)) {
-          edgeSet.add(edgeKey);
-          edgeList.push({ source: srcIdx, target: targetIdx });
-        }
+        if (!edgeSet.has(edgeKey)) { edgeSet.add(edgeKey); edgeList.push({ source: srcIdx, target: targetIdx }); }
       }
     }
   });
-
-  console.log(`[Graph Success] 节点总数: ${nodeList.length}, 成功连线数: ${edgeList.length}`);
   return { nodes: nodeList, edges: edgeList };
 }
 
@@ -110,41 +69,23 @@ const graph = buildGraph(allNotes);
 const noteCount = allNotes.length;
 ---
 
-
 <Layout title="LiteASCII">
   <Navigation client:load />
-
   <main class="main">
-
-    <!-- ── Hero section (ASCII + Graph) ──────────────────────────────────── -->
     <section class="hero">
-      <!-- Left: ASCII animation -->
-      <div class="hero-ascii">
-        <AsciiArt client:only="svelte" noteCount={noteCount} />
-      </div>
-
-      <!-- Right: Knowledge graph -->
+      <div class="hero-ascii"><AsciiArt client:only="svelte" noteCount={noteCount} /></div>
       <div class="hero-graph">
-        <ObsidianGraph
-          client:only="svelte"
-          nodes={graph.nodes}
-          edges={graph.edges}
-          size={280}
-        />
+        <ObsidianGraph client:only="svelte" nodes={graph.nodes} edges={graph.edges} size={280} />
       </div>
     </section>
 
-    <!-- ── Recent notes ────────────────────────────────────────────────────── -->
     <section class="notes-section" id="notes">
       <div class="section-header">
         <h2 class="section-title">Recent Notes</h2>
         <a href="/notes" class="section-more">All notes →</a>
       </div>
-
       {noteCount === 0 ? (
-        <p class="empty-msg">
-          将 Obsidian 笔记放入 <code>src/content/</code> 即可显示
-        </p>
+        <p class="empty-msg">将 Obsidian 笔记放入 <code>src/content/</code> 即可显示</p>
       ) : (
         <div class="notes-grid">
           {recent.map(note => (
@@ -154,107 +95,28 @@ const noteCount = allNotes.length;
               date={note.data.date}
               description={note.data.description}
               tags={note.data.tags}
+              category={note.data.category} 
             />
           ))}
         </div>
       )}
     </section>
-
   </main>
-
   <Footer />
 </Layout>
 
 <style>
-  .main {
-    padding-top: var(--nav-h);
-    max-width: 1200px;
-    margin: 0 auto;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-
-  /* ── Hero ──────────────────────────────────────────────────────────────── */
-  .hero {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 2rem;
-    align-items: center;
-    padding: 2.5rem 0 2rem;
-    min-height: 360px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  @media (max-width: 720px) {
-    .hero {
-      grid-template-columns: 1fr;
-      min-height: unset;
-    }
-    .hero-graph {
-      display: flex;
-      justify-content: center;
-    }
-  }
-
-  .hero-ascii {
-    min-height: 280px;
-    display: flex;
-    align-items: center;
-  }
-
-  .hero-graph {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* ── Notes section ────────────────────────────────────────────────────── */
-  .notes-section {
-    padding: 2.5rem 0 1rem;
-  }
-
-  .section-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 1.25rem;
-  }
-
-  .section-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text);
-    margin: 0;
-  }
-
-  .section-more {
-    font-size: 0.78rem;
-    color: var(--red);
-    font-family: 'Courier New', monospace;
-    transition: color 0.15s;
-  }
+  .main { padding-top: var(--nav-h); max-width: 1200px; margin: 0 auto; padding-left: 1.5rem; padding-right: 1.5rem; }
+  .hero { display: grid; grid-template-columns: 1fr auto; gap: 2rem; align-items: center; padding: 2.5rem 0 2rem; min-height: 360px; border-bottom: 1px solid var(--border); }
+  @media (max-width: 720px) { .hero { grid-template-columns: 1fr; min-height: unset; } .hero-graph { display: flex; justify-content: center; } }
+  .hero-ascii { min-height: 280px; display: flex; align-items: center; }
+  .hero-graph { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .notes-section { padding: 2.5rem 0 1rem; }
+  .section-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1.25rem; }
+  .section-title { font-size: 1rem; font-weight: 600; color: var(--text); margin: 0; }
+  .section-more { font-size: 0.78rem; color: var(--red); font-family: 'Courier New', monospace; transition: color 0.15s; }
   .section-more:hover { color: var(--red-2); }
-
-  .notes-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
-  }
-
-  .empty-msg {
-    font-size: 0.85rem;
-    color: var(--text-3);
-    padding: 2rem;
-    text-align: center;
-    border: 1px dashed var(--border);
-    border-radius: 6px;
-  }
-  .empty-msg code {
-    font-family: 'Courier New', monospace;
-    color: var(--red);
-    background: var(--red-faint);
-    padding: 1px 5px;
-    border-radius: 3px;
-  }
+  .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+  .empty-msg { font-size: 0.85rem; color: var(--text-3); padding: 2rem; text-align: center; border: 1px dashed var(--border); border-radius: 6px; }
+  .empty-msg code { font-family: 'Courier New', monospace; color: var(--red); background: var(--red-faint); padding: 1px 5px; border-radius: 3px; }
 </style>

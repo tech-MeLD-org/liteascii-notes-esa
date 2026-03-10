@@ -3,28 +3,17 @@ import Layout from '../layouts/Layout.astro';
 import Navigation from '../components/Navigation.svelte';
 import Footer from '../components/Footer.astro';
 import { getCollection } from 'astro:content';
-
-// ── 导入统一的逻辑工具 ──────────────────────────────────────────────────
 import { pathToSlug, getNoteTitle, isVisibleNote } from '../utils/note-logic';
 
-// 1. 获取所有笔记并排除带有 'thoughts' 标签的内容及附件
 const rawNotes = await getCollection('notes');
 const allNotes = rawNotes.filter(n => 
   isVisibleNote(n) && 
   !n.data.tags?.some(t => t.toLowerCase() === 'thoughts')
 );
 
-// 有日期的笔记用于时间轴
-const datedNotes = allNotes
-  .filter(n => n.data.date)
-  .sort((a, b) => new Date(b.data.date!).getTime() - new Date(a.data.date!).getTime());
+const datedNotes = allNotes.filter(n => n.data.date).sort((a, b) => new Date(b.data.date!).getTime() - new Date(a.data.date!).getTime());
+const undatedNotes = allNotes.filter(n => !n.data.date).sort((a, b) => getNoteTitle(a).localeCompare(getNoteTitle(b)));
 
-// 无日期的笔记显示在底部
-const undatedNotes = allNotes
-  .filter(n => !n.data.date)
-  .sort((a, b) => getNoteTitle(a).localeCompare(getNoteTitle(b)));
-
-// 按年份分组
 const byYear = new Map<number, typeof datedNotes>();
 for (const note of datedNotes) {
   const year = new Date(note.data.date!).getFullYear();
@@ -36,7 +25,6 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
 
 <Layout title="Timeline · LiteASCII">
   <Navigation client:load />
-
   <main class="main">
     <div class="page-header">
       <h1 class="page-title">Timeline</h1>
@@ -51,7 +39,6 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
             <div class="year-items">
               {byYear.get(year)!.map(note => {
                 const date = new Date(note.data.date!);
-                // 【关键修复】：使用统一的 Slug 转换规则
                 const href = '/notes/' + pathToSlug(note.id); 
                 
                 return (
@@ -59,27 +46,33 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
                     <div class="item-dot"></div>
                     <div class="item-line"></div>
                     <div class="item-content">
-                      <div class="item-meta">
-                        <time class="item-date">
-                          {date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
-                        </time>
-                        
-                        {note.data.tags && (
-                          <div class="item-tags-container">
-                            {note.data.tags.map(tag => (
-                              <span class="item-tag">{tag}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
                       
-                      <a href={href} class="item-link">
-                        <h3 class="item-title">{getNoteTitle(note)}</h3>
+                      <div class="item-card card-click-wrapper">
+                        <time class="item-date">{date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}</time>
+                        
+                        <a href={href} class="card-main-link">
+                          <h3 class="item-title">{getNoteTitle(note)}</h3>
+                        </a>
+                        
                         {note.data.description && (
                           <p class="item-desc">{note.data.description}</p>
                         )}
-                        <span class="item-read">阅读 →</span>
-                      </a>
+                        
+                        <div class="meta-group" style="margin-top: 0.6rem;">
+                          {note.data.category && (
+                            <a href={`/category/${note.data.category}`} class="pill-category">{note.data.category}</a>
+                          )}
+                          {note.data.tags && note.data.tags.length > 0 && (
+                            <div class="pill-tags-group">
+                              {note.data.tags.map(tag => (
+                                <a href={`/tags/${tag}`} class="pill-tag">#{tag}</a>
+                              ))}
+                            </div>
+                          )}
+                          <span class="item-read">阅读 →</span>
+                        </div>
+                      </div>
+
                     </div>
                   </article>
                 );
@@ -95,191 +88,53 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
         <h2 class="undated-title">未标日期的笔记</h2>
         <div class="undated-grid">
           {undatedNotes.map(note => (
-            // 【关键修复】：未标日期部分同样使用统一 Slug
             <a href={'/notes/' + pathToSlug(note.id)} class="undated-item">
               <span class="undated-name">{getNoteTitle(note)}</span>
-              <span class="undated-folder">
-                {note.id.includes('/') ? note.id.split('/').slice(0, -1).join('/') : 'root'}
-              </span>
+              <span class="undated-folder">{note.id.includes('/') ? note.id.split('/').slice(0, -1).join('/') : 'root'}</span>
             </a>
           ))}
         </div>
       </section>
     )}
-
-    {allNotes.length === 0 && (
-      <p class="empty-msg">尚无除随想外的笔记。请在 <code>src/content/notes/</code> 中添加文档。</p>
-    )}
   </main>
-
   <Footer />
 </Layout>
 
 <style>
-  .main {
-    padding-top: calc(var(--nav-h) + 2rem);
-    max-width: 860px;
-    margin: 0 auto;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    padding-bottom: 3rem;
-  }
-
+  .main { padding-top: calc(var(--nav-h) + 2rem); max-width: 860px; margin: 0 auto; padding-left: 1.5rem; padding-right: 1.5rem; padding-bottom: 3rem; }
   .page-header { margin-bottom: 2.5rem; }
   .page-title { margin: 0 0 0.3rem; }
-  .page-sub {
-    font-size: 0.82rem;
-    color: var(--text-3);
-    font-family: 'Courier New', monospace;
-  }
+  .page-sub { font-size: 0.82rem; color: var(--text-3); font-family: 'Courier New', monospace; }
 
-  /* ── Timeline ──────────────────────────────────────────────────────────── */
   .timeline { margin-bottom: 3rem; }
   .year-group { margin-bottom: 2rem; }
-  .year-label {
-    font-size: 0.82rem;
-    font-family: 'Courier New', monospace;
-    font-weight: 700;
-    color: var(--red);
-    letter-spacing: 0.05em;
-    margin-bottom: 1rem;
-  }
-
+  .year-label { font-size: 0.82rem; font-family: 'Courier New', monospace; font-weight: 700; color: var(--red); letter-spacing: 0.05em; margin-bottom: 1rem; }
   .year-items { padding-left: 1.25rem; }
 
-  .timeline-item {
-    display: grid;
-    grid-template-columns: 10px 1px 1fr;
-    gap: 0 0.75rem;
-    margin-bottom: 1.25rem;
-    position: relative;
-  }
-
-  .item-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--red);
-    margin-top: 0.45rem;
-    flex-shrink: 0;
-    z-index: 2;
-  }
-
-  .item-line {
-    background: var(--border);
-    margin-top: 1rem;
-    width: 1px;
-    align-self: stretch;
-  }
-
+  .timeline-item { display: grid; grid-template-columns: 10px 1px 1fr; gap: 0 0.75rem; margin-bottom: 1.25rem; position: relative; }
+  .item-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); margin-top: 0.45rem; flex-shrink: 0; z-index: 2; }
+  .item-line { background: var(--border); margin-top: 1rem; width: 1px; align-self: stretch; }
   .item-content { padding-bottom: 0.5rem; }
 
-  .item-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    margin-bottom: 0.4rem;
-    flex-wrap: wrap;    
+  .item-card {
+    display: block; padding: 1rem 1.25rem; background: var(--bg-card, #1a1a1a);
+    border: 1px solid var(--border); border-radius: 6px; transition: all 0.2s ease;
   }
+  .item-card:hover { border-color: var(--red); transform: translateX(4px); }
+  
+  .item-date { font-size: 0.72rem; color: var(--text-3); font-family: 'Courier New', monospace; display: block; margin-bottom: 0.4rem; }
+  .item-title { font-size: 1rem; font-weight: 600; margin: 0 0 0.3rem; line-height: 1.4; transition: color 0.2s; }
+  .item-card:hover .item-title { color: var(--red); }
+  .item-desc { font-size: 0.85rem; color: var(--text-2); margin: 0; line-height: 1.5; }
+  
+  .item-read { font-size: 0.72rem; color: var(--red); font-family: 'Courier New', monospace; opacity: 0; transition: opacity 0.2s; margin-left: auto; }
+  .item-card:hover .item-read { opacity: 1; }
 
-  .item-date {
-    font-size: 0.72rem;
-    color: var(--text-3);
-    font-family: 'Courier New', monospace;
-  }
-
-  .item-tags-container {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-
-  .item-tag {
-    font-size: 0.65rem;
-    color: var(--red);
-    font-family: 'Courier New', monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    background: var(--red-faint);
-    padding: 1px 4px;
-    border-radius: 2px;
-  }
-
-  .item-link {
-    display: block;
-    padding: 0.75rem 1rem;
-    background: var(--bg-card, #1a1a1a);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    color: inherit;
-    text-decoration: none;
-  }
-  .item-link:hover {
-    border-color: var(--red);
-    transform: translateX(4px);
-  }
-
-  .item-title {
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin: 0 0 0.3rem;
-    line-height: 1.4;
-  }
-  .item-link:hover .item-title { color: var(--red); }
-
-  .item-desc {
-    font-size: 0.8rem;
-    color: var(--text-2);
-    margin: 0 0 0.5rem;
-    line-height: 1.5;
-  }
-
-  .item-read {
-    font-size: 0.72rem;
-    color: var(--red);
-    font-family: 'Courier New', monospace;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .item-link:hover .item-read { opacity: 1; }
-
-  /* ── Undated section ────────────────────────────────────────────────────── */
-  .undated-section {
-    border-top: 1px solid var(--border);
-    padding-top: 2rem;
-  }
-  .undated-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-2);
-    margin: 0 0 1rem;
-  }
-  .undated-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 0.6rem;
-  }
-  .undated-item {
-    display: flex;
-    flex-direction: column;
-    padding: 0.8rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    transition: border-color 0.2s;
-    color: inherit;
-    text-decoration: none;
-  }
+  .undated-section { border-top: 1px solid var(--border); padding-top: 2rem; }
+  .undated-title { font-size: 0.85rem; font-weight: 600; color: var(--text-2); margin: 0 0 1rem; }
+  .undated-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.6rem; }
+  .undated-item { display: flex; flex-direction: column; padding: 0.8rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 5px; transition: border-color 0.2s; color: inherit; text-decoration: none; }
   .undated-item:hover { border-color: var(--red); }
   .undated-name { font-size: 0.85rem; font-weight: 500; }
   .undated-folder { font-size: 0.65rem; color: var(--text-3); margin-top: 0.3rem; }
-
-  .empty-msg {
-    font-size: 0.85rem;
-    color: var(--text-3);
-    padding: 3rem;
-    text-align: center;
-    border: 1px dashed var(--border);
-    border-radius: 8px;
-  }
 </style>

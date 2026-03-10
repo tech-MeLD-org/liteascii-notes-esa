@@ -3,13 +3,10 @@ import Layout from "../layouts/Layout.astro";
 import Navigation from "../components/Navigation.svelte";
 import Footer from "../components/Footer.astro";
 import { getCollection } from "astro:content";
-// thoughts.astro (部分代码)
 import Tag from "../components/Tag.svelte";
 
-// 1. 获取所有笔记
 const allNotes = await getCollection("notes");
 
-// 2. 严格筛选包含 'thoughts' 标签的文档，并按时间倒序排序
 const thoughts = allNotes
   .filter((n) => n.data.tags?.some((t) => t.toLowerCase() === "thoughts"))
   .sort((a, b) => {
@@ -18,13 +15,8 @@ const thoughts = allNotes
     return db - da;
   });
 
-// 3. 提取除了 'thoughts' 以外的其他标签，用于导航模块
 const otherTags = [
-  ...new Set(
-    thoughts
-      .flatMap((n) => n.data.tags || [])
-      .filter((t) => t.toLowerCase() !== "thoughts"),
-  ),
+  ...new Set(thoughts.flatMap((n) => n.data.tags || []).filter((t) => t.toLowerCase() !== "thoughts")),
 ];
 
 function getTitle(note) {
@@ -34,251 +26,105 @@ function getTitle(note) {
   return note.id.replace(/\.md$/, "").split("/").pop() || "Untitled";
 }
 
-function noteSlug(note) {
-  return note.id.replace(/\.md$/, "");
-}
+function noteSlug(note) { return note.id.replace(/\.md$/, ""); }
 ---
 
 <Layout title="Thoughts · LiteASCII">
   <Navigation client:load />
-
   <main class="main">
     <div class="page-header">
       <h1 class="page-title">Thoughts</h1>
-      <p class="page-sub">
-        {thoughts.length} 篇随想 · 记录灵光一闪的瞬间
-      </p>
+      <p class="page-sub">{thoughts.length} 篇随想 · 记录灵光一闪的瞬间</p>
     </div>
 
-    {
-      otherTags.length > 0 && (
-        <div class="tags-nav">
-          <span class="tags-label">更多维度:</span>
-          <div class="tags-cloud">
-            {otherTags.map((tag) => (
-              <Tag name={tag} client:load />
-            ))}
-          </div>
+    {otherTags.length > 0 && (
+      <div class="tags-nav">
+        <span class="tags-label">更多维度:</span>
+        <div class="tags-cloud">
+          {otherTags.map((tag) => <Tag name={tag} client:load />)}
         </div>
-      )
-    }
+      </div>
+    )}
 
     <div class="notes-list">
-      {
-        thoughts.map((note) => {
-          const date = note.data.date ? new Date(note.data.date) : null;
-          // 获取当前笔记除了 thoughts 以外的标签，展示在标题下方
-          const noteOtherTags =
-            note.data.tags?.filter((t) => t.toLowerCase() !== "thoughts") || [];
+      {thoughts.map((note) => {
+        const date = note.data.date ? new Date(note.data.date) : null;
+        const noteOtherTags = note.data.tags?.filter((t) => t.toLowerCase() !== "thoughts") || [];
 
-          return (
-            <article class="note-row">
-              <a href={"/notes/" + noteSlug(note)} class="note-row-link">
-                <div class="note-row-left">
-                  {date && (
-                    <time class="row-date">
-                      {date.toLocaleDateString("zh-CN", {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                      })}
-                    </time>
-                  )}
+        return (
+          <article class="note-row card-click-wrapper">
+            <div class="note-row-inner">
+              <div class="note-row-left">
+                {date && (
+                  <time class="row-date">
+                    {date.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" })}
+                  </time>
+                )}
+                
+                <a href={"/notes/" + noteSlug(note)} class="card-main-link">
                   <h3 class="row-title">{getTitle(note)}</h3>
+                </a>
 
-                  <div class="row-meta">
-                    {note.data.description && (
-                      <span class="row-desc">{note.data.description}</span>
-                    )}
-                    {noteOtherTags.length > 0 && (
-                      <div class="row-tags">
-                        {noteOtherTags.map((t) => (
-                          <span class="mini-tag">{t}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                {note.data.description && (
+                  <p class="row-desc">{note.data.description}</p>
+                )}
+
+                <div class="meta-group" style="margin-top: 0.6rem;">
+                  {note.data.category && (
+                    <a href={`/category/${note.data.category}`} class="pill-category">{note.data.category}</a>
+                  )}
+                  {noteOtherTags.length > 0 && (
+                    <div class="pill-tags-group">
+                      {noteOtherTags.map((t) => (
+                        <a href={`/tags/${t}`} class="pill-tag">#{t}</a>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <span class="row-arrow">→</span>
-              </a>
-            </article>
-          );
-        })
-      }
+              </div>
+              <span class="row-arrow">→</span>
+            </div>
+          </article>
+        );
+      })}
 
-      {
-        thoughts.length === 0 && (
-          <div class="empty-msg">
-            <p>暂无随想笔记。</p>
-            <p>
-              请在 Obsidian 中为笔记添加 <code>tags: [thoughts]</code> 标签。
-            </p>
-          </div>
-        )
-      }
+      {thoughts.length === 0 && (
+        <div class="empty-msg">
+          <p>暂无随想笔记。</p>
+          <p>请在 Obsidian 中为笔记添加 <code>tags: [thoughts]</code> 标签。</p>
+        </div>
+      )}
     </div>
   </main>
-
   <Footer />
 </Layout>
 
 <style>
-  .main {
-    padding-top: calc(var(--nav-h) + 2rem);
-    max-width: 760px;
-    margin: 0 auto;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    padding-bottom: 3rem;
-  }
-  .page-header {
-    margin-bottom: 1.5rem;
-  }
-  .page-title {
-    margin: 0 0 0.3rem;
-  }
-  .page-sub {
-    font-size: 0.82rem;
-    color: var(--text-3);
-    font-family: "Courier New", monospace;
-  }
+  .main { padding-top: calc(var(--nav-h) + 2rem); max-width: 760px; margin: 0 auto; padding-left: 1.5rem; padding-right: 1.5rem; padding-bottom: 3rem; }
+  .page-header { margin-bottom: 1.5rem; }
+  .page-title { margin: 0 0 0.3rem; }
+  .page-sub { font-size: 0.82rem; color: var(--text-3); font-family: "Courier New", monospace; }
 
-  /* 辅助标签样式 */
-  .tags-nav {
-    margin-bottom: 2rem;
-    padding: 1rem;
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    display: flex;
-    align-items: flex-start;
-    gap: 0.8rem;
-  }
-  .tags-label {
-    font-size: 0.75rem;
-    color: var(--text-3);
-    text-transform: uppercase;
-    margin-top: 0.3rem;
-    white-space: nowrap;
-  }
-  .tags-cloud {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .tag-item {
-    font-size: 0.8rem;
-    color: var(--text-2);
-    padding: 0.2rem 0.6rem;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    transition: all 0.2s;
-  }
-  .tag-item:hover {
-    color: var(--red);
-    border-color: var(--red);
-    background: var(--red-faint);
-  }
+  .tags-nav { margin-bottom: 2rem; padding: 1rem; background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: flex-start; gap: 0.8rem; }
+  .tags-label { font-size: 0.75rem; color: var(--text-3); text-transform: uppercase; margin-top: 0.3rem; white-space: nowrap; }
+  .tags-cloud { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
-  .notes-list {
-    display: flex;
-    flex-direction: column;
-  }
-  .note-row {
-    border-bottom: 1px solid var(--border);
-  }
-  .note-row:first-child {
-    border-top: 1px solid var(--border);
-  }
+  .notes-list { display: flex; flex-direction: column; }
+  .note-row { border-bottom: 1px solid var(--border); }
+  .note-row:first-child { border-top: 1px solid var(--border); }
 
-  .note-row-link {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.2rem 0.5rem;
-    gap: 1rem;
-    color: inherit;
-    transition: background 0.15s;
-  }
-  .note-row-link:hover {
-    background: var(--bg-2);
-  }
+  .note-row-inner { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 0.5rem; gap: 1rem; transition: background 0.15s; }
+  .note-row:hover .note-row-inner { background: var(--bg-2); }
 
-  .note-row-left {
-    flex: 1;
-    min-width: 0;
-  }
-  .row-date {
-    font-size: 0.7rem;
-    color: var(--text-3);
-    font-family: "Courier New", monospace;
-    display: block;
-    margin-bottom: 0.3rem;
-  }
+  .note-row-left { flex: 1; min-width: 0; }
+  .row-date { font-size: 0.7rem; color: var(--text-3); font-family: "Courier New", monospace; display: block; margin-bottom: 0.3rem; }
+  .row-title { font-size: 1.05rem; font-weight: 600; color: var(--text); margin: 0 0 0.4rem; transition: color 0.15s; }
+  .note-row:hover .row-title { color: var(--red); }
+  .row-desc { font-size: 0.82rem; color: var(--text-2); margin: 0; line-height: 1.5;}
 
-  .row-title {
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: var(--text);
-    margin: 0 0 0.4rem;
-    transition: color 0.15s;
-  }
-  .note-row-link:hover .row-title {
-    color: var(--red);
-  }
+  .row-arrow { font-size: 1rem; color: var(--text-3); flex-shrink: 0; transition: all 0.2s; position: relative; z-index: 2; }
+  .note-row:hover .row-arrow { color: var(--red); transform: translateX(5px); }
 
-  .row-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    flex-wrap: wrap;
-  }
-
-  .row-desc {
-    font-size: 0.82rem;
-    color: var(--text-2);
-    margin: 0;
-  }
-
-  .row-tags {
-    display: flex;
-    gap: 0.4rem;
-  }
-  .mini-tag {
-    font-size: 0.65rem;
-    color: var(--red);
-    font-family: 'Courier New', monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    background: var(--red-faint);
-    padding: 1px 4px;
-    border-radius: 2px;
-  }
-
-  .row-arrow {
-    font-size: 0.8rem;
-    color: var(--text-3);
-    flex-shrink: 0;
-    transition: all 0.2s;
-  }
-  .note-row-link:hover .row-arrow {
-    color: var(--red);
-    transform: translateX(5px);
-  }
-
-  .empty-msg {
-    padding: 3rem;
-    text-align: center;
-    color: var(--text-3);
-    border: 1px dashed var(--border);
-    border-radius: 12px;
-    margin-top: 1rem;
-  }
-  code {
-    background: var(--red-faint);
-    color: var(--red);
-    padding: 0.2rem 0.4rem;
-    border-radius: 4px;
-  }
+  .empty-msg { padding: 3rem; text-align: center; color: var(--text-3); border: 1px dashed var(--border); border-radius: 12px; margin-top: 1rem; }
+  code { background: var(--red-faint); color: var(--red); padding: 0.2rem 0.4rem; border-radius: 4px; }
 </style>

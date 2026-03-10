@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
 
-  let { videoUrl = "/video/test01.webm", noteCount = 0 } = $props();
+  let { videoUrl = "/video/test03.webm", noteCount = 0 } = $props();
 
   let video;
   let canvas; // 用于最终显示的画布
