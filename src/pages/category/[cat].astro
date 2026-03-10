@@ -3,20 +3,15 @@ import Layout from '../../layouts/Layout.astro';
 import Navigation from '../../components/Navigation.svelte';
 import Footer from '../../components/Footer.astro';
 import { getCollection } from 'astro:content';
-
-// 1. 引入中心化逻辑
 import { isVisibleNote, getNoteTitle, pathToSlug } from '../../utils/note-logic';
 
 export async function getStaticPaths() {
   const allNotes = await getCollection('notes');
-  
-  // 2. 过滤掉草稿和隐藏笔记
   const validNotes = allNotes.filter(isVisibleNote);
   
   const categoryCounts: Record<string, number> = {};
   const tagCounts: Record<string, number> = {};
 
-  // 3. 遍历过滤后的 validNotes
   validNotes.forEach(note => {
     if (note.data.category) {
       const cat = note.data.category;
@@ -54,8 +49,6 @@ export async function getStaticPaths() {
 
 const { cat } = Astro.params;
 const { notes, allCategories, categoryCounts, allTags, tagCounts } = Astro.props;
-
-// 删除了旧的 getTitle 函数，直接在模板中使用导入的 getNoteTitle
 
 function formatDate(dateVal: any) {
   if (!dateVal) return '--/--';
@@ -118,7 +111,7 @@ function formatDate(dateVal: any) {
               <div class="note-card-main">
                 <time class="card-date">{formatDate(note.data.date)}</time>
                 
-                <a href={`/notes/${pathToSlug(note.id)}`} class="card-title-link">
+                <a href={`/notes/${pathToSlug(note.id)}`} class="card-main-link">
                   <h3 class="card-title">{getNoteTitle(note)}</h3>
                 </a>
                 
@@ -128,23 +121,21 @@ function formatDate(dateVal: any) {
                 
                 <div class="card-footer-meta">
                   {note.data.category && (
-                    <a href={`/category/${note.data.category}`} class="card-category-link">
-                      <span class="card-category">[{note.data.category}]</span>
+                    <a href={`/category/${note.data.category}`} class="pill-category">
+                      {note.data.category}
                     </a>
                   )}
                   {note.data.tags && note.data.tags.length > 0 && (
-                    <div class="card-tags">
+                    <div class="pill-tags-group">
                       {note.data.tags.map((t: string) => (
-                        <a href={`/tags/${t}`} class="inline-tag">#{t}</a>
+                        <a href={`/tags/${t}`} class="pill-tag">#{t}</a>
                       ))}
                     </div>
                   )}
                 </div>
               </div>
               
-              <a href={`/notes/${pathToSlug(note.id)}`} class="card-arrow" aria-label="Read more">
-                →
-              </a>
+              <div class="card-arrow-icon">→</div>
             </article>
           ))}
         </div>
@@ -169,46 +160,76 @@ function formatDate(dateVal: any) {
 </script>
 
 <style>
-  /* ── 整体布局 ── */
-  .page-container { margin-top: var(--nav-h); display: flex; flex-direction: column; min-height: 100vh; }
-  .two-column-layout { display: flex; width: 100%; max-width: 1200px; margin: 0 auto; align-items: flex-start; gap: 2.5rem; }
-
-  /* ── 左侧 Widget ── */
-  .widget-sidebar {
-    width: 260px; flex-shrink: 0; position: sticky; top: calc(var(--nav-h) + 2rem);
-    height: fit-content; max-height: calc(100vh - var(--nav-h) - 4rem);
-    overflow-y: auto; scrollbar-width: none;
-  }
-  .widget-sidebar::-webkit-scrollbar { display: none; }
-
-  .widget-box {
-    border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem;
-    margin-bottom: 1.5rem; background: var(--bg);
+  .page-container { 
+    margin-top: var(--nav-h); 
+    display: flex; 
+    flex-direction: column; 
+    min-height: calc(100vh - var(--nav-h));
   }
   
-  .widget-title {
-    font-size: 0.7rem; font-weight: 700; color: var(--text-3); margin: 0 0 1rem 0;
-    letter-spacing: 0.12em; opacity: 0.8;
+  .two-column-layout { 
+    display: flex; 
+    width: 100%; 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    gap: 2.5rem; 
+    padding: 2.5rem 1rem;
+    align-items: flex-start;
   }
 
-  /* ── Category 列表 (新增了 active 状态) ── */
+  /* ── Sidebar ── */
+  .widget-sidebar { 
+    width: 260px; 
+    flex-shrink: 0; 
+    position: sticky; 
+    top: calc(var(--nav-h) + 2.5rem);
+    max-height: calc(100vh - var(--nav-h) - 5rem); 
+    overflow-y: auto; 
+    scrollbar-width: none;
+  }
+  .widget-sidebar::-webkit-scrollbar { display: none; }
+  
+  .widget-box { 
+    border: 1px solid var(--border); 
+    border-radius: 8px; 
+    padding: 1.25rem; 
+    margin-bottom: 1.5rem; 
+    background: var(--bg); 
+  }
+  
+  .widget-title { 
+    font-size: 0.7rem; 
+    font-weight: 700; 
+    color: var(--text-3); 
+    margin: 0 0 1rem 0; 
+    letter-spacing: 0.12em; 
+    opacity: 0.8; 
+  }
+
   .category-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.2rem; }
   
   .category-link {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0.4rem 0.5rem; color: var(--text-2); text-decoration: none;
-    border-radius: 4px; font-size: 0.85rem; transition: background 0.2s, color 0.2s;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    padding: 0.4rem 0.5rem; 
+    color: var(--text-2); 
+    text-decoration: none;
+    border-radius: 4px; 
+    font-size: 0.85rem; 
+    transition: background 0.2s, color 0.2s;
   }
   .category-link:hover { background: var(--bg-2); color: var(--text); }
-  
-  /* 当处于当前分类时，高亮显示 */
-  .category-link.active {
-    background: var(--red-faint); color: var(--red); font-weight: 600;
-  }
+  .category-link.active { background: var(--red-faint); color: var(--red); font-weight: 600; }
   
   .cat-name { font-weight: 500; }
-  .cat-count { font-size: 0.7rem; color: var(--text-3); font-family: 'Courier New', monospace; padding: 0.1rem 0.3rem; border-radius: 6px; }
-  
+  .cat-count { 
+    font-size: 0.7rem; 
+    color: var(--text-3); 
+    font-family: 'Courier New', monospace; 
+    padding: 0.1rem 0.3rem; 
+    border-radius: 6px; 
+  }
   .category-link.active .cat-count { background: rgba(255, 0, 0, 0.1); color: var(--red); }
 
   .hidden-item { display: none; }
@@ -216,78 +237,206 @@ function formatDate(dateVal: any) {
   @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
   .expand-btn {
-    width: 100%; background: none; border: none; padding: 0.5rem 0.5rem 0;
-    text-align: left; font-size: 0.75rem; color: var(--text-3);
-    cursor: pointer; transition: color 0.2s; margin-top: 0.2rem;
+    width: 100%; 
+    background: none; 
+    border: none; 
+    padding: 0.5rem 0.5rem 0;
+    text-align: left; 
+    font-size: 0.75rem; 
+    color: var(--text-3);
+    cursor: pointer; 
+    transition: color 0.2s; 
+    margin-top: 0.2rem;
   }
   .expand-btn:hover { color: var(--red); }
 
   /* ── Tags 云 ── */
   .tags-cloud { display: flex; flex-wrap: wrap; gap: 0.5rem; }
   .tag-pill {
-    display: inline-flex; align-items: center; gap: 0.3rem;
-    padding: 0.25rem 0.6rem; background: var(--bg-2); border: 1px solid transparent;
-    border-radius: 16px; font-size: 0.75rem; color: var(--text-2);
-    text-decoration: none; transition: all 0.2s;
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem; 
+    background: var(--bg-2); 
+    border: 1px solid transparent;
+    border-radius: 16px; 
+    font-size: 0.75rem; 
+    color: var(--text-2);
+    text-decoration: none; 
+    transition: all 0.2s;
   }
   .tag-hash { color: var(--text-3); opacity: 0.6; }
-  .tag-count-sub { font-size: 0.65rem; color: var(--text-3); font-family: 'Courier New', monospace; opacity: 0.7; }
+  .tag-count-sub { 
+    font-size: 0.65rem; 
+    color: var(--text-3); 
+    font-family: 'Courier New', monospace; 
+    opacity: 0.7; 
+  }
   .tag-pill:hover { border-color: var(--border); background: var(--bg); color: var(--text); }
 
-  /* ── 右侧主内容 ── */
-  .content-column { flex: 1; min-width: 0; padding: 2.5rem 2rem 5rem 0; }
-  .page-header { margin-bottom: 3rem; border-left: 3px solid var(--red); padding-left: 1.2rem; }
+  /* ── 内容区域 ── */
+  .content-column { 
+    flex: 1; 
+    min-width: 0; 
+    padding-bottom: 5rem;
+  }
   
-  /* 分类的标题样式使用了括号 [] 而不是 # */
-  .page-title { margin: 0 0 0.4rem; font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; }
+  .page-header { 
+    margin-bottom: 3rem; 
+    border-left: 3px solid var(--red); 
+    padding-left: 1.2rem; 
+  }
+  
+  .page-title { 
+    margin: 0 0 0.4rem; 
+    font-size: 2.2rem; 
+    font-weight: 800; 
+    letter-spacing: -0.02em; 
+  }
+  
   .red-bracket { color: var(--red); font-weight: 400; }
   
-  .page-sub { font-size: 0.85rem; color: var(--text-3); font-family: 'Courier New', monospace; }
+  .page-sub { 
+    font-size: 0.85rem; 
+    color: var(--text-3); 
+    font-family: 'Courier New', monospace; 
+  }
 
-  /* ── 笔记列表 ── */
+  /* ── 笔记卡片 ── */
   .notes-list { display: flex; flex-direction: column; gap: 1.5rem; }
+  
   .note-card {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 1.5rem; border: 1px solid var(--border); border-radius: 8px;
-    background: var(--bg); transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+    padding: 1.5rem; 
+    border: 1px solid var(--border); 
+    border-radius: 8px;
+    background: var(--bg); 
+    transition: all 0.2s ease;
+    cursor: pointer;
   }
-  .note-card:hover { border-color: var(--red); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-
-  .note-card-main { flex: 1; min-width: 0; padding-right: 2rem; }
-  .card-date { font-size: 0.75rem; color: var(--text-3); font-family: 'Courier New', monospace; display: block; margin-bottom: 0.5rem; }
-  
-  .card-title-link { text-decoration: none; color: inherit; display: inline-block; }
-  .card-title { font-size: 1.2rem; font-weight: 600; margin: 0 0 0.5rem; transition: color 0.2s; }
-  .card-title-link:hover .card-title { color: var(--red); }
-  
-  .card-desc { font-size: 0.85rem; color: var(--text-2); margin: 0 0 1rem 0; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
-  .card-footer-meta { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-  
-  /* 分类链接化 */
-  .card-category-link { text-decoration: none; }
-  .card-category { font-size: 0.75rem; font-weight: 600; color: var(--red); font-family: 'Courier New', monospace; transition: opacity 0.2s; }
-  .card-category-link:hover .card-category { opacity: 0.7; }
-  
-  .card-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-  .inline-tag {
-    font-size: 0.7rem; color: var(--text-2); background: var(--bg-2);
-    padding: 0.15rem 0.5rem; border-radius: 3px; font-family: 'Courier New', monospace;
-    text-decoration: none; transition: all 0.2s;
+  .note-card:hover { 
+    border-color: var(--red); 
+    transform: translateY(-2px); 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
   }
-  .inline-tag:hover { background: var(--red-faint); color: var(--red); }
 
-  .card-arrow { font-size: 1.2rem; color: var(--text-3); text-decoration: none; transition: all 0.2s; padding: 0.5rem; }
-  .note-card:hover .card-arrow { color: var(--red); transform: translateX(5px); }
+  .note-card-main { 
+    flex: 1; 
+    min-width: 0; 
+    padding-right: 2rem; 
+  }
+
+  /* 全卡片点击逻辑 */
+  .card-main-link { 
+    text-decoration: none; 
+    color: inherit; 
+    display: inline-block;
+  }
+  .card-main-link::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1;
+  }
+
+  .card-title { 
+    font-size: 1.25rem; 
+    font-weight: 600; 
+    margin: 0 0 0.6rem; 
+    transition: color 0.2s; 
+  }
+  .note-card:hover .card-title { color: var(--red); }
+
+  .card-date { 
+    font-size: 0.75rem; 
+    color: var(--text-3); 
+    font-family: 'Courier New', monospace; 
+    display: block; 
+    margin-bottom: 0.5rem; 
+  }
+  
+  .card-desc { 
+    font-size: 0.88rem; 
+    color: var(--text-2); 
+    margin: 0 0 1.2rem 0; 
+    line-height: 1.6; 
+    display: -webkit-box; 
+    -webkit-line-clamp: 2; 
+    -webkit-box-orient: vertical; 
+    overflow: hidden; 
+  }
+
+  .card-footer-meta { 
+    display: flex; 
+    align-items: center; 
+    gap: 0.8rem; 
+    position: relative; 
+    z-index: 2;
+    flex-wrap: wrap;
+  }
+
+  /* 分类 Pill */
+  .pill-category {
+    font-size: 0.7rem; 
+    font-weight: 600; 
+    color: #ff5e4d;
+    background: rgba(255, 94, 77, 0.08);
+    padding: 0.2rem 0.6rem; 
+    border-radius: 4px;
+    text-decoration: none; 
+    font-family: 'Courier New', monospace;
+    transition: all 0.2s;
+  }
+  .pill-category:hover { background: rgba(255, 94, 77, 0.15); }
+
+  /* 标签 Pill */
+  .pill-tags-group { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .pill-tag {
+    font-size: 0.7rem; 
+    color: var(--text-2); 
+    background: var(--bg-2);
+    padding: 0.15rem 0.5rem; 
+    border-radius: 4px;
+    font-family: 'Courier New', monospace; 
+    text-decoration: none;
+    transition: all 0.2s;
+    position: relative;
+    z-index: 2;
+  }
+  .pill-tag:hover { background: var(--border); color: var(--text); }
+
+  .card-arrow-icon { 
+    font-size: 1.2rem; 
+    color: var(--text-3); 
+    transition: all 0.2s;
+    position: relative;
+    z-index: 2;
+  }
+  .note-card:hover .card-arrow-icon { 
+    color: var(--red); 
+    transform: translateX(5px); 
+  }
 
   /* ── 移动端适配 ── */
   @media (max-width: 900px) {
-    .two-column-layout { flex-direction: column; padding: 0 1.25rem; gap: 1.5rem; }
-    .widget-sidebar { width: 100%; position: relative; top: 0; max-height: none; }
+    .two-column-layout { 
+      flex-direction: column; 
+      padding: 1.25rem; 
+      gap: 1.5rem; 
+    }
+    .widget-sidebar { 
+      width: 100%; 
+      position: relative; 
+      top: 0; 
+      max-height: none; 
+    }
     .widget-box { margin-bottom: 1rem; }
-    .content-column { padding: 1rem 0 3rem 0; width: 100%; }
+    .content-column { padding-bottom: 3rem; }
     .note-card { flex-direction: column; align-items: flex-start; }
     .note-card-main { padding-right: 0; margin-bottom: 1rem; }
-    .card-arrow { align-self: flex-end; }
+    .card-arrow-icon { align-self: flex-end; }
   }
 </style>
