@@ -43,29 +43,35 @@
           target: e.target,
         }));
 
-        // 计算每个节点的度数（引用数）
-        const degrees = arr.map(
+        // 计算每个节点的出度（引用其他文档的数量）
+        const outDegrees = arr.map(
+          (_, i) =>
+            linkData.filter((l) => l.source === i).length,
+        );
+        // 计算总度数（用于大小计算）
+        const totalDegrees = arr.map(
           (_, i) =>
             linkData.filter((l) => l.source === i || l.target === i).length,
         );
-        const maxDegree = Math.max(...degrees, 1);
+        const maxOutDegree = Math.max(...outDegrees, 1);
 
         const nodeData = arr.map((n, i) => ({
           ...n,
           index: i,
-          degree: degrees[i],
-          r: BASE_R + degrees[i] * 2.5, // 引用越多球越大
+          outDegree: outDegrees[i],
+          totalDegree: totalDegrees[i],
+          r: BASE_R + totalDegrees[i] * 2.5, // 总连接数决定大小
           fx: null,
           fy: null,
         }));
 
-        // 颜色逻辑：引用越多越红，无引用为灰色
+        // 颜色逻辑：只有引用其他文档时才变红，无引用为灰色
         const colorScale = (d) => {
-          if (d.degree === 0) {
+          if (d.outDegree === 0) {
             return 'var(--text-3, #7a7a7a)'; // 无引用 = 灰色
           }
           // 引用越多，红色越深
-          const ratio = d.degree / maxDegree;
+          const ratio = d.outDegree / maxOutDegree;
           // 从浅红到深红的过渡
           const lightness = 70 - ratio * 45; // 70% -> 25%
           const saturation = 60 + ratio * 30; // 60% -> 90%
@@ -105,7 +111,7 @@
             "stroke-width",
             (l) =>
               2.0 +
-              (nodeData[l.source].degree + nodeData[l.target].degree) * 0.2,
+              (nodeData[l.source].totalDegree + nodeData[l.target].totalDegree) * 0.2,
           );
 
         const nodeSel = g
@@ -147,8 +153,8 @@
           .append("circle")
           .attr("r", (d) => d.r)
           .attr("fill", (d) => colorScale(d))
-          .attr("stroke", (d) => d.degree > 0 ? 'rgba(255,255,255,0.15)' : 'none')
-          .attr("stroke-width", (d) => d.degree > 0 ? 1 : 0);
+          .attr("stroke", 'var(--border, #303032)')
+          .attr("stroke-width", 2);
 
         nodeSel
           .append("text")
@@ -193,7 +199,7 @@
           // 这样既能保证大球推开周围，又不会让整个系统飞散
           .force(
             "charge",
-            forceManyBody().strength((d) => -20 - d.degree * 20),
+            forceManyBody().strength((d) => -20 - d.totalDegree * 20),
           )
 
           // 2. 缩短连线距离：从 45 缩短到 30，让结构更紧凑

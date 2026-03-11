@@ -4,6 +4,18 @@ import Navigation from '../components/Navigation.svelte';
 import Footer from '../components/Footer.astro';
 ---
 
+
+
+// 这里的代码只在构建时运行
+const response = await fetch('https://api.github.com/users/你的用户名');
+const data = await response.json();
+const publicStars = data.public_repos; // 或者通过 repos 接口累加所有 star
+
+
+
+
+
+
 <Layout title="About · LiteASCII">
   <Navigation client:load />
 

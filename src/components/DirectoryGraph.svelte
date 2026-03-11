@@ -209,12 +209,8 @@
                             el.append("circle")
                                 .attr("r", (d) => getRadius(d))
                                 .attr("fill", (d) => getColor(d))
-                                .attr("stroke", (d) =>
-                                    d.type === "folder"
-                                        ? "rgba(255,255,255,0.2)"
-                                        : "none",
-                                )
-                                .attr("stroke-width", 1);
+                                .attr("stroke", 'var(--border, #303032)')
+                                .attr("stroke-width", 2);
 
                             // 绘制文字标签
                             el.append("text")
