@@ -27,14 +27,28 @@
             // 建立快速查找字典
             const nodeMap = new Map();
             const childrenMap = new Map();
+            const depthMap = new Map(); // 记录每个节点的深度
+
+            // 计算每个节点的深度
+            const getDepth = (nodeId) => {
+                if (nodeId === 'root') return 0;
+                const parts = nodeId.split('/');
+                return parts.length;
+            };
 
             data.forEach((d) => {
+                const depth = getDepth(d.id);
+                depthMap.set(d.id, depth);
+                
                 // 给每个节点附上初始物理坐标，初始均设为中心
-                nodeMap.set(d.id, { ...d, x: 0, y: 0, vx: 0, vy: 0 });
+                nodeMap.set(d.id, { ...d, x: 0, y: 0, vx: 0, vy: 0, depth });
                 if (!childrenMap.has(d.parentId))
                     childrenMap.set(d.parentId, []);
                 childrenMap.get(d.parentId).push(d.id);
             });
+
+            // 计算最大深度
+            const maxDepth = Math.max(...Array.from(depthMap.values()));
 
             const svg = select(containerEl)
                 .append("svg")
@@ -66,16 +80,53 @@
                         .distance(80)
                         .strength(1),
                 )
-                .force("charge", d3Force.forceManyBody().strength(-300)) // 强斥力，让炸开的效果更明显
+                .force("charge", d3Force.forceManyBody().strength(-300))
                 .force(
                     "collide",
                     d3Force
                         .forceCollide()
-                        .radius((d) => (d.type === "folder" ? 30 : 15))
+                        .radius((d) => getRadius(d) + 3)
                         .strength(0.8),
                 )
                 .force("x", d3Force.forceX(0).strength(0.05))
                 .force("y", d3Force.forceY(0).strength(0.05));
+
+            // 半径计算逻辑
+            function getRadius(d) {
+                // 根据深度确定基础大小：同级文件夹，子级越多球越大
+                const children = childrenMap.get(d.id) || [];
+                const childCount = children.length;
+
+                if (d.id === "root") {
+                    // 根节点最大
+                    return 30 + Math.min(childCount * 2, 15);
+                }
+
+                if (d.type === "folder") {
+                    // 文件夹：基础大小 + 子节点数量加权
+                    const baseSize = Math.max(20 - d.depth * 3, 12);
+                    return baseSize + Math.min(childCount * 1.5, 12);
+                }
+
+                // 文件（文档）：固定小尺寸，灰色
+                return 5;
+            }
+
+            // 颜色计算逻辑：按深度区分颜色
+            function getColor(d) {
+                if (d.type === "file") {
+                    // 文档 = 灰色
+                    return 'var(--text-3, #7a7a7a)';
+                }
+
+                // 文件夹：根据深度渐变颜色
+                // 深度越小越红，深度越大越接近灰色
+                const depthRatio = d.depth / maxDepth; // 0 -> 1
+                // 红色系的渐变
+                const lightness = 30 + depthRatio * 40; // 30% (深红) -> 70% (浅灰红)
+                const saturation = 80 - depthRatio * 40; // 80% -> 40%
+                return `hsl(6, ${saturation}%, ${lightness}%)`;
+            }
 
             // 核心动态更新函数
             function updateGraph() {
@@ -108,26 +159,6 @@
                         });
                     }
                 }
-
-                // 在 updateGraph 函数内部增加颜色计算
-                const colorScale = (d) => {
-                    const depth = d.id.split("/").length;
-                    // 越深颜色越亮，文件夹和文件色相区分
-                    if (d.type === "folder") {
-                        return `hsl(6, 70%, ${Math.min(20 + depth * 12, 60)}%)`; // 红色系文件夹
-                    }
-                    return `hsl(210, 10%, ${Math.max(80 - depth * 10, 40)}%)`; // 灰白色系文件
-                };
-
-                // 修改半径计算：根据子节点数量动态调整小球体积
-                const getRadius = (d) => {
-                    if (d.id === "root") return 30;
-                    if (d.type === "folder") {
-                        const childCount = childrenMap.get(d.id)?.length || 0;
-                        return 15 + Math.min(childCount * 2, 20); // 子节点越多球越大
-                    }
-                    return 6; // 文件保持小巧
-                };
 
                 // ── 渲染连线 ──
                 const linkSel = linkGroup
@@ -174,14 +205,13 @@
                                         }),
                                 );
 
-                            // 绘制圆圈：文件夹较大且有红色边框，文件较小且是灰白色
-                            // 在 join 部分更新 circle 属性
+                            // 绘制圆圈
                             el.append("circle")
                                 .attr("r", (d) => getRadius(d))
-                                .attr("fill", (d) => colorScale(d))
+                                .attr("fill", (d) => getColor(d))
                                 .attr("stroke", (d) =>
                                     d.type === "folder"
-                                        ? "rgba(255,255,255,0.1)"
+                                        ? "rgba(255,255,255,0.2)"
                                         : "none",
                                 )
                                 .attr("stroke-width", 1);
@@ -190,13 +220,13 @@
                             el.append("text")
                                 .text((d) => d.label)
                                 .attr("dy", (d) =>
-                                    d.type === "folder" ? 35 : 20,
+                                    d.type === "folder" ? getRadius(d) + 15 : 18,
                                 )
                                 .attr("text-anchor", "middle")
                                 .attr("fill", "var(--text, #eee)")
                                 .attr("font-family", "'Courier New', monospace")
                                 .attr("font-size", (d) =>
-                                    d.type === "folder" ? "12px" : "10px",
+                                    d.type === "folder" ? "11px" : "9px",
                                 );
 
                             // 【点击事件】：文件夹分裂/收缩，文档直接跳转
@@ -215,7 +245,13 @@
 
                             return el;
                         },
-                        (update) => update,
+                        (update) => {
+                            // 更新现有节点的半径和颜色
+                            update.select("circle")
+                                .attr("r", (d) => getRadius(d))
+                                .attr("fill", (d) => getColor(d));
+                            return update;
+                        },
                         (exit) => exit.remove(),
                     );
 

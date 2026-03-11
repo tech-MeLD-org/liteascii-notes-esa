@@ -43,6 +43,7 @@
           target: e.target,
         }));
 
+        // 计算每个节点的度数（引用数）
         const degrees = arr.map(
           (_, i) =>
             linkData.filter((l) => l.source === i || l.target === i).length,
@@ -53,12 +54,23 @@
           ...n,
           index: i,
           degree: degrees[i],
-          r: BASE_R + degrees[i] * 1.5,
+          r: BASE_R + degrees[i] * 2.5, // 引用越多球越大
           fx: null,
           fy: null,
         }));
 
-        const colorScale = (d) => `hsl(6, 61%, ${70 - (d / maxDegree) * 40}%)`;
+        // 颜色逻辑：引用越多越红，无引用为灰色
+        const colorScale = (d) => {
+          if (d.degree === 0) {
+            return 'var(--text-3, #7a7a7a)'; // 无引用 = 灰色
+          }
+          // 引用越多，红色越深
+          const ratio = d.degree / maxDegree;
+          // 从浅红到深红的过渡
+          const lightness = 70 - ratio * 45; // 70% -> 25%
+          const saturation = 60 + ratio * 30; // 60% -> 90%
+          return `hsl(6, ${saturation}%, ${lightness}%)`;
+        };
 
         const svg = select(containerEl)
           .append("svg")
@@ -134,7 +146,9 @@
         nodeSel
           .append("circle")
           .attr("r", (d) => d.r)
-          .attr("fill", (d) => colorScale(d.degree));
+          .attr("fill", (d) => colorScale(d))
+          .attr("stroke", (d) => d.degree > 0 ? 'rgba(255,255,255,0.15)' : 'none')
+          .attr("stroke-width", (d) => d.degree > 0 ? 1 : 0);
 
         nodeSel
           .append("text")
@@ -148,7 +162,7 @@
 
         nodeSel
           .on("mouseenter", function (_, d) {
-            select(this).select("circle").attr("fill", "hsl(6, 61%, 80%)");
+            select(this).select("circle").attr("fill", "hsl(6, 80%, 85%)");
             select(this).select("text").style("opacity", 1);
             nodeSel.attr("opacity", (nd) => {
               if (nd.index === d.index) return 1;
@@ -164,7 +178,7 @@
             nodeSel
               .attr("opacity", 1)
               .select("circle")
-              .attr("fill", (d) => colorScale(d.degree));
+              .attr("fill", (d) => colorScale(d));
             nodeSel.select("text").style("opacity", 0);
           })
           .on("click", (_, d) => {
