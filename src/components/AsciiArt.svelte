@@ -4,8 +4,6 @@
    *
    * To use a different animation, change the import below:
    *   import Animation from './ascii/TypeWriter.svelte';   ← current
-   *   import Animation from './ascii/VideoASCII_BlackWhite.svelte';   ← video ascii black and white
-   *   import Animation from './ascii/VideoASCII_color.svelte';   ← video ascii color
    *   import Animation from './ascii/WebGLASCII_color.svelte';   ← WebGL ascii color
   
    */

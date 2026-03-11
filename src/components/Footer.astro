@@ -9,12 +9,7 @@ const year = new Date().getFullYear();
       <p class="brand-desc">知识生长于链接之中</p>
     </div>
 
-    <nav class="footer-nav">
-      <a href="/">Home</a>
-      <a href="/notes">Notes</a>
-      <a href="/timeline">Timeline</a>
-      <a href="/about">About</a>
-    </nav>
+    <!-- 导航链接已移除 -->
 
     <p class="footer-copy">© {year} · Built with Astro & Svelte</p>
   </div>
@@ -33,7 +28,8 @@ const year = new Date().getFullYear();
     margin: 0 auto;
     display: flex;
     align-items: center;
-    gap: 2rem;
+    justify-content: space-between;
+    gap: 1rem;
     flex-wrap: wrap;
   }
 
@@ -54,24 +50,10 @@ const year = new Date().getFullYear();
     font-family: 'Courier New', monospace;
   }
 
-  .footer-nav {
-    display: flex;
-    gap: 1.25rem;
-    flex-wrap: wrap;
-  }
-
-  .footer-nav a {
-    font-size: 0.8rem;
-    color: var(--text-2);
-    transition: color 0.15s;
-  }
-  .footer-nav a:hover { color: var(--red); }
-
   .footer-copy {
-    width: 100%;
     font-size: 0.72rem;
     color: var(--text-3);
-    margin: 0.5rem 0 0;
+    margin: 0;
     font-family: 'Courier New', monospace;
   }
 </style>
