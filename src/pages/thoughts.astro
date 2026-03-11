@@ -59,11 +59,11 @@ function formatDate(dateVal: any) {
                 {noteTags.length > 0 && (
                   <div class="card-tags-row">
                     <div class="meta-tags">
-                      {noteTags.slice(0, 3).map((t: string) => (
+                      {noteTags.slice(0, 5).map((t: string) => (
                         <a href={`/tags/${t}`} class="meta-tag">#{t}</a>
                       ))}
-                      {noteTags.length > 3 && (
-                        <span class="more-tags">+{noteTags.length - 3}</span>
+                      {noteTags.length > 5 && (
+                        <span class="more-tags">+{noteTags.length - 5}</span>
                       )}
                     </div>
                   </div>
@@ -125,14 +125,13 @@ function formatDate(dateVal: any) {
   .thought-card {
     border: 1px solid var(--border);
     border-radius: 8px;
-    background: var(--bg);
+    background: var(--bg-card, #1a1a1a);
     transition: all 0.2s ease;
   }
   
   .thought-card:hover {
     border-color: var(--red);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transform: translateY(-3px);
   }
 
   .card-inner { 
@@ -182,13 +181,14 @@ function formatDate(dateVal: any) {
   
   .card-title { 
     font-size: 0.95rem; 
-    font-weight: 500; 
+    font-weight: 600; 
     color: var(--text); 
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     transition: color 0.2s;
+    line-height: 1.4;
   }
   
   .thought-card:hover .card-title { 
@@ -217,9 +217,11 @@ function formatDate(dateVal: any) {
     border-radius: 4px;
     text-decoration: none;
     font-family: "Courier New", monospace;
-    transition: all 0.2s;
+    transition: all 0.15s;
     white-space: nowrap;
     flex-shrink: 0;
+    position: relative;
+    z-index: 2;
   }
   
   .meta-tag:hover {
@@ -229,7 +231,6 @@ function formatDate(dateVal: any) {
 
   .more-tags {
     font-size: 0.7rem;
-    color: var(--text-3);
     background: var(--red-faint);
     color: var(--red);
     padding: 0.15rem 0.5rem;
@@ -237,6 +238,8 @@ function formatDate(dateVal: any) {
     font-family: "Courier New", monospace;
     white-space: nowrap;
     flex-shrink: 0;
+    position: relative;
+    z-index: 2;
   }
 
   .card-arrow { 

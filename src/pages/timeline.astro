@@ -39,40 +39,47 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
             <div class="year-items">
               {byYear.get(year)!.map(note => {
                 const date = new Date(note.data.date!);
+                const monthDay = date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
                 const href = '/notes/' + pathToSlug(note.id); 
                 
                 return (
                   <article class="timeline-item">
-                    <div class="item-dot"></div>
-                    <div class="item-line"></div>
+                    <div class="item-date-col">
+                      <time class="item-date">{monthDay}</time>
+                      <div class="item-line"></div>
+                    </div>
                     <div class="item-content">
-                      
                       <div class="item-card card-click-wrapper">
-                        <time class="item-date">{date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}</time>
-                        
                         <a href={href} class="card-main-link">
                           <h3 class="item-title">{getNoteTitle(note)}</h3>
                         </a>
                         
-                        {note.data.description && (
-                          <p class="item-desc">{note.data.description}</p>
-                        )}
-                        
-                        <div class="meta-group" style="margin-top: 0.6rem;">
-                          {note.data.category && (
-                            <a href={`/category/${note.data.category}`} class="pill-category">{note.data.category}</a>
-                          )}
-                          {note.data.tags && note.data.tags.length > 0 && (
-                            <div class="pill-tags-group">
-                              {note.data.tags.map(tag => (
-                                <a href={`/tags/${tag}`} class="pill-tag">#{tag}</a>
-                              ))}
+                        {(() => {
+                          const noteTags = note.data.tags || [];
+                          const maxTags = 5;
+                          const displayTags = noteTags.slice(0, maxTags);
+                          const hasMore = noteTags.length > maxTags;
+                          
+                          return (
+                            <div class="meta-group">
+                              {note.data.category && (
+                                <a href={`/category/${note.data.category}`} class="pill-category">{note.data.category}</a>
+                              )}
+                              {displayTags.length > 0 && (
+                                <div class="pill-tags-group">
+                                  {displayTags.map(tag => (
+                                    <a href={`/tags/${tag}`} class="pill-tag">#{tag}</a>
+                                  ))}
+                                  {hasMore && (
+                                    <span class="more-tags">+{noteTags.length - maxTags}</span>
+                                  )}
+                                </div>
+                              )}
+                              <span class="item-read">阅读 →</span>
                             </div>
-                          )}
-                          <span class="item-read">阅读 →</span>
-                        </div>
+                          );
+                        })()}
                       </div>
-
                     </div>
                   </article>
                 );
@@ -102,39 +109,214 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
 
 <style>
   .main { padding-top: calc(var(--nav-h) + 2rem); max-width: 860px; margin: 0 auto; padding-left: 1.5rem; padding-right: 1.5rem; padding-bottom: 3rem; }
-  .page-header { margin-bottom: 2.5rem; }
-  .page-title { margin: 0 0 0.3rem; }
-  .page-sub { font-size: 0.82rem; color: var(--text-3); font-family: 'Courier New', monospace; }
+  .page-header { 
+    margin-bottom: 2rem; 
+    border-left: 3px solid var(--red);
+    padding-left: 1rem;
+  }
+  .page-title { 
+    margin: 0 0 0.3rem; 
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .page-sub { 
+    font-size: 0.85rem; 
+    color: var(--text-3); 
+    font-family: 'Courier New', monospace; 
+    margin: 0;
+  }
 
   .timeline { margin-bottom: 3rem; }
   .year-group { margin-bottom: 2rem; }
   .year-label { font-size: 0.82rem; font-family: 'Courier New', monospace; font-weight: 700; color: var(--red); letter-spacing: 0.05em; margin-bottom: 1rem; }
-  .year-items { padding-left: 1.25rem; }
+  .year-items { padding-left: 0; }
 
-  .timeline-item { display: grid; grid-template-columns: 10px 1px 1fr; gap: 0 0.75rem; margin-bottom: 1.25rem; position: relative; }
-  .item-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); margin-top: 0.45rem; flex-shrink: 0; z-index: 2; }
-  .item-line { background: var(--border); margin-top: 1rem; width: 1px; align-self: stretch; }
-  .item-content { padding-bottom: 0.5rem; }
+  .timeline-item { 
+    display: flex; 
+    gap: 0 0; 
+    margin-bottom: 1rem; 
+    position: relative;
+  }
+
+  .item-date-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 56px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  
+  .item-date { 
+    font-size: 0.7rem; 
+    color: var(--text-3); 
+    font-family: 'Courier New', monospace; 
+    text-align: center;
+    padding: 0.3rem 0;
+    white-space: nowrap;
+  }
+  
+  .item-line { 
+    flex: 1;
+    width: 1px;
+    background: var(--border); 
+    margin-top: 0.25rem;
+  }
+
+  .item-content { 
+    flex: 1;
+    padding-bottom: 1rem;
+    padding-left: 0.75rem;
+  }
 
   .item-card {
-    display: block; padding: 1rem 1.25rem; background: var(--bg-card, #1a1a1a);
-    border: 1px solid var(--border); border-radius: 6px; transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    padding: 0.9rem 1rem; 
+    background: var(--bg-card, #1a1a1a);
+    border: 1px solid var(--border); 
+    border-radius: 8px; 
+    transition: all 0.2s ease;
+    min-height: 80px;
+    box-sizing: border-box;
   }
-  .item-card:hover { border-color: var(--red); transform: translateX(4px); }
+  .item-card:hover { 
+    border-color: var(--red); 
+    transform: translateY(-3px);
+  }
   
-  .item-date { font-size: 0.72rem; color: var(--text-3); font-family: 'Courier New', monospace; display: block; margin-bottom: 0.4rem; }
-  .item-title { font-size: 1rem; font-weight: 600; margin: 0 0 0.3rem; line-height: 1.4; transition: color 0.2s; }
-  .item-card:hover .item-title { color: var(--red); }
-  .item-desc { font-size: 0.85rem; color: var(--text-2); margin: 0; line-height: 1.5; }
+  .item-title { 
+    font-size: 0.95rem; 
+    font-weight: 600; 
+    margin: 0 0 0.5rem; 
+    line-height: 1.4; 
+    transition: color 0.2s; 
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .item-card:hover .item-title { 
+    color: var(--red); 
+  }
   
-  .item-read { font-size: 0.72rem; color: var(--red); font-family: 'Courier New', monospace; opacity: 0; transition: opacity 0.2s; margin-left: auto; }
-  .item-card:hover .item-read { opacity: 1; }
+  .meta-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+    margin-top: auto;
+    overflow: hidden;
+  }
 
-  .undated-section { border-top: 1px solid var(--border); padding-top: 2rem; }
-  .undated-title { font-size: 0.85rem; font-weight: 600; color: var(--text-2); margin: 0 0 1rem; }
-  .undated-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.6rem; }
-  .undated-item { display: flex; flex-direction: column; padding: 0.8rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 5px; transition: border-color 0.2s; color: inherit; text-decoration: none; }
-  .undated-item:hover { border-color: var(--red); }
-  .undated-name { font-size: 0.85rem; font-weight: 500; }
-  .undated-folder { font-size: 0.65rem; color: var(--text-3); margin-top: 0.3rem; }
+  .pill-category {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--red);
+    background: var(--red-faint);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-family: 'Courier New', monospace;
+    transition: all 0.15s;
+  }
+  
+  .pill-category:hover {
+    background: rgba(255, 94, 77, 0.15);
+  }
+
+  .pill-tags-group {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+  }
+
+  .pill-tag {
+    font-size: 0.65rem;
+    color: var(--text-3);
+    background: var(--bg-2);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-family: 'Courier New', monospace;
+  }
+  .pill-tag:hover {
+    color: var(--text);
+    background: var(--border);
+  }
+
+  .more-tags {
+    font-size: 0.65rem;
+    background: var(--red-faint);
+    color: var(--red);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    white-space: nowrap;
+  }
+  
+  .item-read { 
+    font-size: 0.72rem; 
+    color: var(--red); 
+    font-family: 'Courier New', monospace; 
+    opacity: 0; 
+    transition: opacity 0.2s; 
+    margin-left: auto; 
+  }
+  .item-card:hover .item-read { 
+    opacity: 1; 
+  }
+
+  .undated-section { 
+    border-top: 1px solid var(--border); 
+    padding-top: 2rem; 
+  }
+  .undated-title { 
+    font-size: 0.85rem; 
+    font-weight: 600; 
+    color: var(--text-2); 
+    margin: 0 0 1rem; 
+  }
+  .undated-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+    gap: 0.6rem; 
+  }
+  .undated-item { 
+    display: flex; 
+    flex-direction: column; 
+    padding: 0.8rem; 
+    background: var(--bg-card); 
+    border: 1px solid var(--border); 
+    border-radius: 5px; 
+    transition: border-color 0.2s; 
+    color: inherit; 
+    text-decoration: none; 
+  }
+  .undated-item:hover { 
+    border-color: var(--red); 
+  }
+  .undated-name { 
+    font-size: 0.85rem; 
+    font-weight: 500; 
+  }
+  .undated-folder { 
+    font-size: 0.65rem; 
+    color: var(--text-3); 
+    margin-top: 0.3rem; 
+  }
+
+  @media (max-width: 640px) {
+    .item-date-col {
+      width: 48px;
+    }
+    .item-date {
+      font-size: 0.65rem;
+    }
+    .item-title {
+      font-size: 0.9rem;
+    }
+  }
 </style>
