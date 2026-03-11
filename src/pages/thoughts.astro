@@ -48,22 +48,26 @@ function formatDate(dateVal: any) {
         return (
           <article class="thought-card card-click-wrapper">
             <div class="card-inner">
-              <div class="card-left">
-                <time class="card-date">{formatDate(note.data.date)}</time>
+              <div class="card-main">
+                <div class="card-row">
+                  <time class="card-date">{formatDate(note.data.date)}</time>
+                  <a href={"/notes/" + noteSlug(note)} class="card-title-link">
+                    <h3 class="card-title">{getTitle(note)}</h3>
+                  </a>
+                </div>
                 
-                <a href={"/notes/" + noteSlug(note)} class="card-title-link">
-                  <h3 class="card-title">{getTitle(note)}</h3>
-                </a>
-
-                <div class="card-meta">
-                  {noteTags.length > 0 && (
+                {noteTags.length > 0 && (
+                  <div class="card-tags-row">
                     <div class="meta-tags">
-                      {noteTags.map((t: string) => (
+                      {noteTags.slice(0, 3).map((t: string) => (
                         <a href={`/tags/${t}`} class="meta-tag">#{t}</a>
                       ))}
+                      {noteTags.length > 3 && (
+                        <span class="more-tags">+{noteTags.length - 3}</span>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
               <span class="card-arrow">→</span>
             </div>
@@ -135,16 +139,23 @@ function formatDate(dateVal: any) {
     display: flex; 
     align-items: center; 
     justify-content: space-between; 
-    padding: 0.9rem 1rem; 
-    gap: 1rem;
+    padding: 0.75rem 1rem; 
+    gap: 0.75rem;
   }
 
-  .card-left { 
-    flex: 1; 
-    min-width: 0; 
+  .card-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .card-row {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
+    min-width: 0;
   }
   
   .card-date { 
@@ -152,7 +163,7 @@ function formatDate(dateVal: any) {
     color: var(--text-3); 
     font-family: "Courier New", monospace;
     white-space: nowrap;
-    min-width: 80px;
+    flex-shrink: 0;
   }
   
   .card-title-link {
@@ -184,34 +195,48 @@ function formatDate(dateVal: any) {
     color: var(--red); 
   }
 
-  .card-meta {
+  .card-tags-row {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    position: relative;
-    z-index: 2;
+    min-width: 0;
   }
   
   .meta-tags {
     display: flex;
-    gap: 0.3rem;
-    flex-wrap: wrap;
+    gap: 0.35rem;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    align-items: center;
   }
   
   .meta-tag {
     font-size: 0.7rem;
     color: var(--text-3);
     background: var(--bg-2);
-    padding: 0.1rem 0.4rem;
+    padding: 0.15rem 0.5rem;
     border-radius: 4px;
     text-decoration: none;
     font-family: "Courier New", monospace;
     transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   
   .meta-tag:hover {
     background: var(--border);
     color: var(--text);
+  }
+
+  .more-tags {
+    font-size: 0.7rem;
+    color: var(--text-3);
+    background: var(--red-faint);
+    color: var(--red);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-family: "Courier New", monospace;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .card-arrow { 
@@ -247,13 +272,13 @@ function formatDate(dateVal: any) {
 
   @media (max-width: 640px) {
     .card-inner {
-      padding: 0.8rem;
+      padding: 0.7rem 0.8rem;
     }
     
-    .card-left {
+    .card-row {
       flex-direction: column;
       align-items: flex-start;
-      gap: 0.4rem;
+      gap: 0.3rem;
     }
     
     .card-date {
@@ -262,6 +287,10 @@ function formatDate(dateVal: any) {
     
     .card-title {
       font-size: 0.9rem;
+    }
+
+    .meta-tags {
+      flex-wrap: wrap;
     }
   }
 </style>
