@@ -1,38 +1,63 @@
 <script lang="ts">
+  import { tagSlug, categorySlug } from '../../lib/core/note-logic';
+
   interface Props {
     variant?: 'tag' | 'category' | 'default';
     size?: 'sm' | 'md';
+    /** 标签/分类的文本内容 */
+    label?: string;
+    /** 链接地址（传入后自动渲染为 <a> 标签） */
     href?: string;
+    /** 是否自动根据 variant 生成链接 */
+    autoLink?: boolean;
     children?: import('svelte').Snippet;
   }
 
-  let { 
-    variant = 'default', 
+  let {
+    variant = 'default',
     size = 'sm',
-    href,
-    children 
+    label = '',
+    href = '',
+    autoLink = false,
+    children
   }: Props = $props();
 
-  const variantClasses = {
-    tag: 'bg-[#1e1e20] text-[#565658] hover:text-[#e8e8e6] hover:bg-[#303032]',
-    category: 'bg-[rgba(231,76,60,0.1)] text-[#e74c3c] hover:bg-[rgba(231,76,60,0.2)]',
-    default: 'bg-[#1e1e20] text-[#a8a8a6] hover:text-[#e8e8e6] hover:bg-[#303032]',
-  };
+  // 计算最终链接
+  const computedHref = $derived(() => {
+    if (href) return href;
+    if (!autoLink || !label) return '';
+    return variant === 'tag' ? `/tags/${tagSlug(label)}` :
+           variant === 'category' ? `/category/${categorySlug(label)}` :
+           '';
+  });
 
-  const sizeClasses = {
-    sm: 'text-xs px-2 py-0.5',
-    md: 'text-sm px-3 py-1',
-  };
+  // 复合样式类
+  const className = $derived(() => {
+    const sizeClass = size === 'sm' ? 'ui-pill-sm' : 'ui-pill-md';
+    const variantClass = variant === 'tag' ? 'ui-pill-tag' :
+                         variant === 'category' ? 'ui-pill-category' :
+                         'ui-pill-default';
+    return `ui-pill ${sizeClass} ${variantClass}`;
+  });
 
-  const baseClasses = 'inline-flex items-center gap-1 rounded font-mono transition-colors duration-150';
+  const finalHref = computedHref();
+  const finalClass = className();
 </script>
 
-{#if href}
-  <a {href} class="{baseClasses} {variantClasses[variant]} {sizeClasses[size]}">
-    {@render children?.()}
+{#if finalHref}
+  <a href={finalHref} class={finalClass}>
+    {#if children}
+      {@render children()}
+    {:else}
+      {label}
+    {/if}
   </a>
 {:else}
-  <span class="{baseClasses} {variantClasses[variant]} {sizeClasses[size]}">
-    {@render children?.()}
+  <span class={finalClass}>
+    {#if children}
+      {@render children()}
+    {:else}
+      {label}
+    {/if}
   </span>
 {/if}

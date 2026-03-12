@@ -1,5 +1,5 @@
 <script>
-  import { pathToSlug } from '../utils/note-logic';
+  import { pathToSlug } from '../lib/core/note-logic.ts';
   
   let { allNotes = [], currentSlug = "" } = $props();
 

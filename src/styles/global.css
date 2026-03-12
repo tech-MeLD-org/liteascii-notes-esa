@@ -27,6 +27,71 @@
   --nav-height: 52px;
 }
 
+/* ─── Tailwind Components Layer ───────────────────────────────────────────── */
+@layer components {
+  /* ── UI Pill 基础样式 ─────────────────────────────────────────────────── */
+  .ui-pill {
+    @apply inline-flex items-center gap-1 rounded font-mono transition-all duration-200;
+  }
+
+  .ui-pill-sm {
+    @apply text-xs px-2 py-0.5;
+  }
+
+  .ui-pill-md {
+    @apply text-sm px-3 py-1;
+  }
+
+  /* 标签变体 - 默认状态 */
+  .ui-pill-tag {
+    @apply bg-[#1e1e20] text-[#565658] border border-transparent hover:border-[#424244];
+  }
+
+  /* 分类变体 */
+  .ui-pill-category {
+    @apply bg-[rgba(231,76,60,0.1)] text-[#e74c3c] border border-transparent;
+  }
+
+  /* 默认/中性变体 */
+  .ui-pill-default {
+    @apply bg-[#1e1e20] text-[#a8a8a6] border border-transparent hover:bg-[#303032] hover:text-[#e8e8e6];
+  }
+
+  /* ── 交互式卡片（标签联动高亮）────────────────────────────────────────── */
+  .interactive-card {
+    @apply relative transition-all duration-300 ease-out;
+  }
+
+  /* 卡片悬停时，内部标签联动变色 */
+  .interactive-card:hover .ui-pill-tag,
+  .interactive-card:hover .ui-pill-default {
+    @apply bg-[rgba(231,76,60,0.15)] text-[#e8e8e6] border-[rgba(231,76,60,0.3)];
+  }
+
+  /* 卡片悬停时，分类标签加深 */
+  .interactive-card:hover .ui-pill-category {
+    @apply bg-[rgba(231,76,60,0.2)] text-[#ff6b5b];
+  }
+
+  /* ── 卡片基础样式 ─────────────────────────────────────────────────────── */
+  .ui-card {
+    @apply bg-[#242426] border border-[#303032] rounded-lg overflow-hidden transition-all duration-300;
+  }
+
+  .ui-card-hover {
+    @apply hover:border-[#424244] hover:shadow-lg hover:shadow-black/20 hover:-translate-y-0.5;
+  }
+
+  /* ── 链接样式 ─────────────────────────────────────────────────────────── */
+  .ui-link {
+    @apply text-[#e74c3c] underline underline-offset-2 transition-colors duration-150;
+  }
+
+  .ui-link:hover {
+    @apply text-[#ff6b5b];
+  }
+}
+
 /* ─── Base Reset ──────────────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
