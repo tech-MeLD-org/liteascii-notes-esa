@@ -9,6 +9,8 @@
     category?: string;
     tags?: string[];
     maxTags?: number;
+    highlightTag?: string;
+    highlightCategory?: string;
   }
 
   let {
@@ -18,7 +20,9 @@
     description,
     category,
     tags = [],
-    maxTags = 3
+    maxTags = 3,
+    highlightTag,
+    highlightCategory
   }: Props = $props();
 
   const displayedTags = $derived(tags.slice(0, maxTags));
@@ -49,11 +53,21 @@
 
   <div class="flex items-center gap-2 flex-wrap mt-auto relative z-10">
     {#if category}
-      <Pill variant="category" size="sm" label={category} autoLink={true} />
+      <Pill 
+        variant={category === highlightCategory ? 'category-active' : 'category'} 
+        size="sm" 
+        label={category} 
+        autoLink={true} 
+      />
     {/if}
 
     {#each displayedTags as tag}
-      <Pill variant="tag" size="sm" label={tag} autoLink={true} />
+      <Pill 
+        variant={tag === highlightTag ? 'tag-active' : 'tag'} 
+        size="sm" 
+        label={tag} 
+        autoLink={true} 
+      />
     {/each}
 
     {#if hiddenTagCount > 0}

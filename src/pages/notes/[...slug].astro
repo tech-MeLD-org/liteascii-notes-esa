@@ -2,10 +2,12 @@
 import { getCollection, render } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/layout/Header.svelte';
-import CategoryList from '../../components/features/CategoryList.svelte';
+import CategoryList from '../../components/layout/CategoryList.svelte';
 import Footer from '../../components/layout/Footer.svelte';
+import Document from '../../components/layout/Document.svelte';
 import Pill from '../../components/ui/Pill.svelte';
 import { isVisibleNote, pathToSlug, getNoteTitle } from '../../lib/core/note-logic';
+import { convertHeadings } from '../../lib/hooks/useDocument.svelte';
 
 export async function getStaticPaths() {
   const noteEntries = await getCollection('notes');
@@ -17,16 +19,16 @@ export async function getStaticPaths() {
 }
 
 const { entry, allNotes } = Astro.props;
-const { Content, headings } = await render(entry); 
+const { Content, headings } = await render(entry);
 const title = getNoteTitle(entry);
 const currentSlug = pathToSlug(entry.id);
+
+const docHeadings = convertHeadings(headings);
 
 const { tags = [], category, date } = entry.data;
 const dateStr = date
   ? new Date(date).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
   : null;
-
-const filteredHeadings = headings.filter(h => h.depth >= 1 && h.depth <= 3);
 ---
 
 <Layout title={`${title} · LiteASCII`}>
@@ -37,113 +39,48 @@ const filteredHeadings = headings.filter(h => h.depth >= 1 && h.depth <= 3);
       <CategoryList client:load allNotes={allNotes} currentSlug={currentSlug} />
 
       <main class="flex-1 min-w-0 max-w-[860px] py-10 px-16 pb-20">
-        <article class="prose max-w-none">
-          <header class="mb-14 pb-8 border-b border-dashed border-border-color">
-            <a href="/" class="text-xs text-text-muted mb-6 inline-block hover:text-primary transition-colors">← BACK</a>
-            {dateStr && <time class="font-mono text-xs text-text-muted block mb-2">{dateStr}</time>}
-            <h1 class="text-[2.8rem] font-extrabold leading-tight mb-5 text-text-main">{title}</h1>
+        <article class="max-w-none">
+          <!-- 头部区域：独立容器，不受 prose 影响 -->
+          <header class="doc-header mb-14 pb-8 border-b border-dashed border-[var(--color-border)]">
+            <a 
+              href="/" 
+              class="text-xs text-[var(--color-text-muted)] mb-6 inline-block hover:text-[var(--color-primary)] transition-colors"
+            >
+              ← BACK
+            </a>
+            {dateStr && (
+              <time class="font-mono text-xs text-[var(--color-text-muted)] block mb-2">
+                {dateStr}
+              </time>
+            )}
+            <h1 class="text-[2.8rem] font-extrabold leading-tight mb-5 doc-title">
+              {title}
+            </h1>
             
             <!-- Category 和 Tags -->
             <div class="flex items-center gap-3 flex-wrap mt-4">
               {category && (
-                <Pill client:load variant="category" href={`/category/${category}`}>{category}</Pill>
+                <Pill client:load variant="category" href={`/category/${category}`}>
+                  {category}
+                </Pill>
               )}
               {tags.map(tag => (
-                <Pill client:load variant="tag" href={`/tags/${tag}`}>#{tag}</Pill>
+                <Pill client:load variant="tag" href={`/tags/${tag}`}>
+                  #{tag}
+                </Pill>
               ))}
             </div>
           </header>
 
-          <section class="markdown-body">
+          <!-- 正文区域：使用 prose -->
+          <section class="markdown-body prose">
             <Content />
           </section>
         </article>
       </main>
 
-      <!-- TOC 右侧栏 -->
-      <aside class="w-[240px] flex-shrink-0 sticky top-[calc(52px+2rem)] h-fit max-h-[calc(100vh-52px-4rem)] overflow-y-auto scrollbar-hide overscroll-contain hidden lg:block">
-        <div class="border-l border-border-color pl-2 ml-4">
-          <div class="text-[0.65rem] font-bold text-text-muted uppercase tracking-wider mb-5 pl-3 opacity-50">
-            ON THIS PAGE
-          </div>
-          <nav id="toc-nav">
-            {filteredHeadings.map((h) => (
-              <a 
-                href={`#${h.slug}`} 
-                class={`block py-1.5 px-3 rounded text-sm transition-all mb-0.5 text-text-muted overflow-hidden text-ellipsis whitespace-nowrap hover:bg-surface hover:text-text-secondary
-                  ${h.depth === 1 ? 'text-[0.82rem] pl-3 opacity-75' : ''}
-                  ${h.depth === 2 ? 'text-[0.78rem] pl-6 opacity-65' : ''}
-                  ${h.depth === 3 ? 'text-[0.75rem] pl-9 opacity-55' : ''}
-                `}
-                title={h.text}
-              >
-                <span class="overflow-hidden text-ellipsis whitespace-nowrap">{h.text}</span>
-              </a>
-            ))}
-          </nav>
-        </div>
-      </aside>
+      <Document client:load headings={docHeadings} />
     </div>
     <Footer />
   </div>
 </Layout>
-
-<script>
-  let isClickScrolling = false;
-  let scrollTimeout: any = null;
-
-  function setActiveHeading(id: string) {
-    document.querySelectorAll('#toc-nav a').forEach(a => a.classList.remove('bg-primary-faint', 'text-primary', 'font-semibold', 'opacity-100'));
-    const activeLink = document.querySelector(`#toc-nav a[href="#${id}"]`);
-    if (activeLink) {
-      activeLink.classList.add('bg-primary-faint', 'text-primary', 'font-semibold', 'opacity-100');
-      activeLink.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }
-  }
-
-  const headingElements = Array.from(
-    document.querySelectorAll('.markdown-body h1, .markdown-body h2, .markdown-body h3')
-  ).filter(h => h.id) as HTMLElement[];
-
-  function updateTocOnScroll() {
-    if (isClickScrolling || headingElements.length === 0) return;
-    const triggerLine = window.scrollY + 120;
-    let currentHeading = headingElements[0];
-    for (const h of headingElements) {
-      if (h.offsetTop <= triggerLine) currentHeading = h;
-      else break;
-    }
-    setActiveHeading(currentHeading.id);
-  }
-
-  window.addEventListener('scroll', () => requestAnimationFrame(updateTocOnScroll), { passive: true });
-  updateTocOnScroll();
-
-  document.querySelectorAll('#toc-nav a').forEach(anchor => {
-    anchor.addEventListener('click', (e) => {
-      e.preventDefault();
-      const targetSlug = (e.currentTarget as HTMLAnchorElement).getAttribute('href')?.slice(1);
-      if (!targetSlug) return;
-      const targetEl = document.getElementById(targetSlug);
-      if (targetEl) {
-        isClickScrolling = true;
-        setActiveHeading(targetSlug);
-        window.scrollTo({ top: targetEl.offsetTop - 100, behavior: 'smooth' });
-        if (scrollTimeout) clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => { isClickScrolling = false; }, 1500);
-      }
-    });
-  });
-</script>
-
-<style>
-  /* 正文一级标题为红色 */
-  :global(.markdown-body h1) {
-    color: #e74c3c;
-  }
-
-  @media (max-width: 900px) {
-    :global(.explorer-sidebar) { display: none; }
-    main { padding: 2rem 1.25rem; }
-  }
-</style>

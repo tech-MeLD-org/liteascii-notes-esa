@@ -1,7 +1,7 @@
 <script lang="ts">
   import { buildNoteTree, type TreeNode } from '../../lib/utils/note-tree';
   import { createSidebar } from '../../lib/hooks/useCategoryList.svelte';
-
+//文档内左侧栏
   // 接收 Props (遵循你的定义)
   interface Note {
     id: string;

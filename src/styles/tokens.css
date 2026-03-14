@@ -23,4 +23,9 @@
 
   /* Navigation */
   --nav-height: 52px;
+
+  /* Document - Heading */
+  --heading-h1: #e74c3c;
+  --heading-h2: #f1c833;
+  --heading-h3: #8be248;
 }

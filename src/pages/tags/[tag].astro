@@ -60,7 +60,7 @@ const noteListData = notes.map(note => ({
   href: `/notes/${noteSlug(note.id)}`,
   date: formatDate(note.data.date),
   description: note.data.description,
-  category: note.data.category,
+  category: note.data.category as string | undefined,
   tags: note.data.tags || [],
 }));
 ---
@@ -94,6 +94,7 @@ const noteListData = notes.map(note => ({
           client:load
           notes={noteListData}
           emptyText="该标签下暂无笔记"
+          highlightTag={tag}
         />
       </main>
       

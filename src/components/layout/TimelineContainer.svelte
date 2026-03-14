@@ -30,7 +30,7 @@
         <!-- 该年份的笔记列表 -->
         <div class="space-y-6">
           {#each year.notes as note}
-            <article class="group relative flex gap-4 sm:gap-8">
+            <article class="timeline-item relative flex gap-4 sm:gap-8">
               <!-- 左侧日期和圆点 -->
               <div class="flex flex-col items-center w-14 flex-shrink-0 pt-3">
                 <time class="text-xs text-[var(--color-text-muted)] font-mono whitespace-nowrap mb-2">

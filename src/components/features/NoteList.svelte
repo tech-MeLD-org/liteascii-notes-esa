@@ -14,12 +14,16 @@
     notes: Note[];
     emptyText?: string;
     emptyHint?: string;
+    highlightTag?: string;
+    highlightCategory?: string;
   }
 
   let { 
     notes, 
     emptyText = '暂无笔记',
-    emptyHint
+    emptyHint,
+    highlightTag,
+    highlightCategory
   }: Props = $props();
 </script>
 
@@ -32,6 +36,8 @@
       description={note.description}
       category={note.category}
       tags={note.tags}
+      {highlightTag}
+      {highlightCategory}
     />
   {/each}
   

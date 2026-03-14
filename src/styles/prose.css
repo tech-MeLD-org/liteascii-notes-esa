@@ -113,3 +113,28 @@
   border-top: 1px solid var(--color-border);
   margin: 2em 0;
 }
+
+/* 正文一级标题 */
+.markdown-body h1 {
+  color: var(--heading-h1);
+}
+
+/* 正文二级标题 */
+.markdown-body h2 {
+  color: var(--heading-h2); 
+}
+/* 正文三级标题 */
+.markdown-body h3 {
+  color: var(--heading-h3);
+}
+
+/* 文档头部样式 - 独立于 prose，不受全局链接样式影响 */
+.doc-header {
+  /* 基础排版样式，不含颜色覆盖 */
+  line-height: 1.75;
+}
+
+.doc-title {
+  /* 标题使用红色，与原来一致 */
+  color: var(--color-primary);
+}
