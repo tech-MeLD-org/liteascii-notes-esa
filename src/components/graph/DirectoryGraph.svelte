@@ -53,7 +53,8 @@
         .attr("width", "100%")
         .attr("height", "100%")
         .attr("viewBox", `${-width / 2} ${-height / 2} ${width} ${height}`)
-        .style("display", "block");
+        .style("display", "block")
+        .style("background-color", "var(--color-bg-secondary)");
 
       const g = svg.append("g");
       const linkGroup = g.append("g");
@@ -154,7 +155,7 @@
               : d.source + "-" + d.target,
           )
           .join("line")
-          .attr("stroke", "var(--border-color)")
+          .attr("stroke", "var(--color-border-light)")
           .attr("stroke-width", 2)
           .attr("opacity", 0.6);
 
@@ -199,7 +200,7 @@
                   d.type === "folder" ? getRadius(d) + 15 : 18,
                 )
                 .attr("text-anchor", "middle")
-                .attr("fill", "var(--text-main)")
+                .attr("fill", "var(--color-text)")
                 .attr("font-family", "'Courier New', monospace")
                 .attr("font-size", (d) =>
                   d.type === "folder" ? "11px" : "9px",

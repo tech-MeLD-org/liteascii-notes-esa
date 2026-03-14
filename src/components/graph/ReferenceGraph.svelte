@@ -81,7 +81,8 @@
           .attr("width", w)
           .attr("height", h)
           .attr("viewBox", `${-w / 2} ${-h / 2} ${w} ${h}`)
-          .style("display", "block");
+          .style("display", "block")
+          .style("background-color", "var(--color-bg-secondary)");
 
         const defs = svg.append("defs");
         defs
@@ -103,7 +104,7 @@
           .selectAll("line")
           .data(linkData)
           .join("line")
-          .attr("stroke", "var(--text-muted)")
+          .attr("stroke", "var(--color-border-light)")
           .attr("opacity", 0.7)
           .attr(
             "stroke-width",
@@ -159,7 +160,7 @@
           .attr("dx", (d) => d.r + 3)
           .attr("dy", "0.35em")
           .attr("font-size", "9px")
-          .attr("fill", "var(--text-secondary)")
+          .attr("fill", "var(--color-text)")
           .style("opacity", 0)
           .style("pointer-events", "none");
 

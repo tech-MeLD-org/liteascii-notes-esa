@@ -1,92 +1,113 @@
-/* components.css */
 @layer components {
   /* ── UI Pill 基础样式 ─────────────────────────────────────────────────── */
   .ui-pill {
     @apply inline-flex items-center gap-1 rounded font-mono transition-all duration-300 ease-in-out;
   }
 
-  .ui-pill-sm {
-    @apply text-xs px-2 py-0.5;
-  }
-
-  .ui-pill-md {
-    @apply text-sm px-3 py-1;
-  }
+  .ui-pill-sm { @apply text-xs px-2 py-0.5; }
+  .ui-pill-md { @apply text-sm px-3 py-1; }
 
   /* ── 标签 (Tag) ── */
-  /* 默认：暗淡/低调 */
-  /* 悬停：变成红色调 */
   .ui-pill-tag {
-    @apply bg-[#1e1e20] text-[#565658] border border-transparent 
+    /* 修复：使用变量代替 #1e1e20 和 #565658 */
+    @apply bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border border-transparent 
            hover:bg-[var(--color-primary-faint)] 
            hover:text-[var(--color-primary)] 
            hover:border-[var(--color-primary-soft)]
            relative z-10; 
   }
 
-  /* 标签激活状态（高亮） */
   .ui-pill-tag-active {
     @apply bg-[var(--color-primary)] text-white border border-[var(--color-primary)] 
            font-semibold relative z-10;
   }
 
   /* ── 分类 (Category) ── */
-  /* 默认：已经是红色调 */
-  /* 悬停：背景和文字进一步加亮 */
   .ui-pill-category {
     @apply bg-[var(--color-primary-faint)] text-[var(--color-primary)] border border-transparent
            hover:bg-[var(--color-primary-soft)] 
-           hover:text-[var(--color-primary-light)]
+           hover:text-[var(--color-primary)]
            hover:border-[var(--color-primary-soft)]
            relative z-10;
   }
 
-  /* 分类激活状态（高亮） */
   .ui-pill-category-active {
     @apply bg-[var(--color-primary)] text-white border border-[var(--color-primary)] 
            font-semibold relative z-10;
   }
 
-  /* ── 默认/计数变体 (例如那个 +n) ── */
+  /* ── 默认/计数变体 (例如 +n) ── */
   .ui-pill-default {
-    @apply bg-[#1e1e20] text-[#a8a8a6] border border-transparent 
-           hover:bg-[#303032] hover:text-[#e8e8e6];
+    /* 修复：使用变量代替 #1e1e20, #a8a8a6 等 */
+    @apply bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] border border-transparent 
+           hover:bg-[var(--color-border)] hover:text-[var(--color-text)];
   }
 
-  /* ── 卡片基础样式 ─────────────────────────────────────────────────────── */
+  /* ── 卡片基础样式 (Cards) ────────────────────────────────────────────────── */
   .ui-card {
-    @apply bg-[#242426] border border-[#303032] rounded-lg overflow-hidden transition-all duration-300;
+    /* 修复：使用变量代替 #242426 和 #303032 */
+    @apply bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg overflow-hidden transition-all duration-300;
   }
 
   .interactive-card {
     @apply relative transition-all duration-300 ease-out;
   }
 
-  /* 移除了之前的 .interactive-card:hover .ui-pill-tag 联动 */
-  /* 现在卡片悬停只负责卡片自身的外框和位移 */
   .ui-card-hover,
   .interactive-card:hover {
-    @apply hover:border-[#424244] hover:shadow-lg hover:shadow-black/20 hover:-translate-y-0.5;
+    /* 修复：悬停边框使用变量代替 #424244，阴影使用半透明变量 */
+    @apply hover:border-[var(--color-border-light)] hover:shadow-lg hover:shadow-black/10 hover:-translate-y-0.5;
   }
 
-  /* ── TimelineContainer 时间轴专用样式 ─────────────────────────────────────────── */
-  
-  /* 垂直时间线 */
+  /* 时间标签 */
+  .ui-card-time {
+    @apply text-xs text-[var(--color-text-muted)] font-mono block mb-2 relative z-10 pointer-events-none;
+  }
+
+  /* 标题容器 */
+  .ui-card-title {
+    @apply text-lg font-semibold mb-2 transition-colors duration-200;
+  }
+
+  /* 标题链接本身 */
+  .ui-card-link {
+    @apply text-[var(--color-text)] outline-none;
+  }
+
+  /* 悬停时，标题变成主题色 (利用父级 group 触发) */
+  .group:hover .ui-card-link {
+    @apply text-[var(--color-primary)];
+  }
+
+  /* 扩大点击区域 (Stretched Link) - 核心交互逻辑 */
+  .ui-card-link::before {
+    content: "";
+    @apply absolute inset-0 z-0;
+  }
+
+  /* 卡片描述/摘要 */
+  .ui-card-desc {
+    @apply text-sm text-[var(--color-text-secondary)] line-clamp-2 mb-3 leading-relaxed relative z-10 pointer-events-none;
+  }
+
+  /* 底部标签组容器 */
+  .ui-card-footer {
+    @apply flex items-center gap-2 flex-wrap mt-auto relative z-10;
+  }
+
+  /* ── TimelineContainer (时间轴) ────────────────────────────────────────── */
   .timeline-line {
     @apply absolute left-[27px] top-2 bottom-0 w-px bg-[var(--color-border)] hidden sm:block;
   }
 
-  /* 时间轴圆点 */
   .timeline-dot {
     @apply w-2 h-2 rounded-full bg-[var(--color-border)] transition-colors z-10 hidden sm:block;
   }
 
-  /* 圆点悬停效果 - 需要在 timeline-item 内使用 */
   .timeline-item:hover .timeline-dot {
     @apply bg-[var(--color-primary)];
   }
 
-  /* READ → 悬停效果 */
   .timeline-read-more {
     @apply text-xs text-[var(--color-primary)] font-mono opacity-0 transition-all transform translate-x-2 ml-auto hidden sm:inline;
   }
@@ -95,35 +116,190 @@
     @apply opacity-100 translate-x-0;
   }
 
-  /* ── Document 文档大纲样式 ─────────────────────────────────────────────── */
+  .timeline-year-section {
+    @apply mb-12 relative;
+  }
+
+  .timeline-year-header {
+    @apply flex items-center gap-4 mb-6;
+  }
+
+  .timeline-year-badge {
+    @apply z-10 bg-[var(--color-bg)] py-1 font-mono font-bold text-[var(--color-primary)] tracking-wider;
+  }
+
+  .timeline-year-divider {
+    @apply flex-1 h-px bg-[var(--color-border)] opacity-50;
+  }
+
+  .timeline-notes-list {
+    @apply space-y-6;
+  }
+
+  .timeline-item {
+    @apply relative flex gap-4 sm:gap-8;
+  }
+
+  .timeline-date-wrapper {
+    @apply flex flex-col items-center w-14 flex-shrink-0 pt-3;
+  }
+
+  .timeline-date-text {
+    @apply text-xs text-[var(--color-text-muted)] font-mono whitespace-nowrap mb-2;
+  }
+
+  .timeline-card-wrapper {
+    @apply flex-1 pb-2;
+  }
+
+  /* ── 无日期笔记 (Undated Notes) ────────────────────────────────────────── */
   
-  /* 文档大纲链接基础样式 */
+  .undated-section {
+    @apply mt-16 pt-8 border-t border-[var(--color-border)];
+  }
+
+  .undated-header {
+    @apply text-xs font-mono uppercase tracking-widest text-[var(--color-text-muted)] mb-6 flex items-center gap-2;
+  }
+
+  .undated-dot {
+    @apply w-2 h-2 bg-[var(--color-border)] rounded-full;
+  }
+
+  .undated-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+  }
+
+  .undated-card {
+    /* 继承了卡片基础属性，并增加了悬停互动 */
+    @apply flex flex-col p-4 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg 
+           hover:border-[var(--color-primary-soft)] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/10 
+           transition-all duration-300;
+  }
+
+  .undated-title {
+    @apply text-[0.9rem] font-medium text-[var(--color-text)];
+  }
+
+  .undated-path {
+    @apply text-[10px] font-mono text-[var(--color-text-muted)] mt-2 uppercase tracking-tight;
+  }
+
+  /* ── Sidebar (侧边栏) ──────────────────────────────────────────────────── */
+  
+  .sidebar-container {
+    @apply flex flex-col gap-6;
+  }
+
+  .sidebar-section-title {
+    /* 注意：我修正了你原本写的 text-text-main 为明确的变量，防止 tailwind 配置缺失 */
+    @apply text-sm font-bold text-[var(--color-text)] mb-3 flex items-center gap-2;
+  }
+
+  .sidebar-section-indicator {
+    @apply w-1 h-4 bg-[var(--color-primary)] rounded-full;
+  }
+
+  /* ── Document (文档大纲) ────────────────────────────────────────────────── */
   .doc-outline-link {
     @apply block py-1.5 px-3 rounded text-sm mb-0.5 text-[var(--color-text-muted)] 
            overflow-hidden text-ellipsis whitespace-nowrap transition-all duration-150;
   }
 
   .doc-outline-link:hover {
-    @apply bg-[var(--color-bg-card)] text-[var(--color-text-secondary)];
+    @apply bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)];
   }
 
-  /* 文档大纲层级缩进 */
-  .doc-outline-level-1 {
-    @apply text-[0.82rem] pl-3 opacity-75;
-  }
-
-  .doc-outline-level-2 {
-    @apply text-[0.78rem] pl-6 opacity-65;
-  }
-
-  .doc-outline-level-3 {
-    @apply text-[0.75rem] pl-9 opacity-55;
-  }
-
-  /* 文档大纲激活状态 */
   .doc-outline-link-active {
+    /* 已经在使用变量，保持不变 */
     @apply bg-[var(--color-primary-faint)] text-[var(--color-primary)] font-semibold opacity-100;
   }
 }
 
+/* ── PageHeader (页面标题) ──────────────────────────────────────────────── */
+  .page-header {
+    @apply border-l-4 border-[var(--color-primary)] pl-4 py-2 mb-8;
+  }
 
+  .page-header-title {
+    @apply text-3xl font-extrabold tracking-tight text-[var(--color-text)] mb-1;
+  }
+
+  .page-header-subtitle {
+    @apply text-sm text-[var(--color-text-muted)] font-mono;
+  }
+
+/* ── Navigation (导航栏) ────────────────────────────────────────────────── */
+  .nav-bar {
+    @apply fixed top-0 left-0 right-0 z-[100] h-[var(--nav-height)] 
+           bg-[var(--color-bg)]/80 backdrop-blur-md border-b border-[var(--color-border)];
+  }
+
+  .nav-inner {
+    @apply max-w-[1200px] mx-auto px-6 h-full flex items-center gap-8;
+  }
+
+  .nav-logo {
+    @apply text-[1.05rem] font-bold text-[var(--color-primary)] tracking-wider 
+           whitespace-nowrap flex-shrink-0 hover:text-[var(--color-primary-light)] transition-colors;
+  }
+
+  .nav-links-desktop {
+    /* 移除 hidden sm:flex，让链接在所有尺寸下都显示，或者根据你的需求保持 hidden */
+    @apply hidden sm:flex list-none m-0 p-0 gap-6 flex-1;
+  }
+
+  .nav-link {
+    @apply text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors;
+  }
+
+  .nav-actions {
+    @apply flex items-center gap-1.5 ml-auto;
+  }
+
+  .nav-btn {
+    @apply flex items-center justify-center w-8 h-8 border border-[var(--color-border)] 
+           rounded-md bg-transparent text-[var(--color-text-secondary)] 
+           cursor-pointer transition-colors hover:text-[var(--color-primary)] hover:border-[var(--color-primary)];
+  }
+
+  /* ── Search Modal (搜索模态框) ─────────────────────────────────────────── */
+  .search-overlay {
+    @apply fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm flex items-start justify-center pt-[10vh];
+  }
+
+  .search-content {
+    @apply w-[min(640px,90vw)] bg-[var(--color-bg-card)] border border-[var(--color-border-light)] 
+           rounded-xl overflow-hidden shadow-2xl;
+  }
+
+  .search-header {
+    @apply flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)];
+  }
+
+  .search-tip {
+    @apply text-[0.7rem] text-[var(--color-text-muted)] font-mono;
+  }
+
+  /* ── Footer (页脚) ────────────────────────────────────────────────────── */
+  .site-footer {
+    @apply border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)] 
+           mt-16 py-8 px-6;
+  }
+
+  .footer-inner {
+    @apply max-w-[1200px] mx-auto flex items-center justify-between gap-4 flex-wrap;
+  }
+
+  .footer-brand {
+    @apply text-[0.95rem] font-bold text-[var(--color-primary)] tracking-wider 
+           hover:text-[var(--color-primary-light)] transition-colors;
+  }
+
+  .footer-tagline {
+    @apply text-xs text-[var(--color-text-muted)] mt-1 font-mono;
+  }
+
+  .footer-copy {
+    @apply text-[0.72rem] text-[var(--color-text-muted)] font-mono;
+  }

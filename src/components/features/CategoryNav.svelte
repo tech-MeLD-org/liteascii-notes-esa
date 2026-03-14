@@ -24,8 +24,9 @@
     {#each expandable.displayItems as category}
     {@const isActive = current === category.name}
     {@const displayName = category.name === '未分类' ? '全部' : category.name}
+    {@const href = category.name === '未分类' ? '/notes' : category.href}
     <a 
-      href={category.href}
+      href={href}
       class="flex items-center justify-between py-2 px-3 rounded-lg text-sm transition-colors
         {isActive
           ? 'bg-[var(--color-primary-faint)] text-[var(--color-primary)] font-semibold' 

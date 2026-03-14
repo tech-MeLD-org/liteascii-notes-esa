@@ -1,31 +1,73 @@
-/* tokens.css (设计变量)，专门用于存放所有 CSS 变量（颜色、间距等），方便统一管理主题。 */
+/* tokens.css */
+
+/* 1. 默认状态（暗色模式） */
 :root {
   /* Primary - Red theme */
   --color-primary: #e74c3c;
   --color-primary-light: #ff6b5b;
   --color-primary-dark: #c0392b;
   --color-primary-faint: rgba(231, 76, 60, 0.1);
-  --color-primary-soft: rgba(231, 76, 60, 0.22);
+  --color-primary-soft: rgba(231, 76, 60, 0.2);
 
-  /* Background */
+  /* Background (Dark) */
   --color-bg: #161618;
   --color-bg-secondary: #1e1e20;
   --color-bg-card: #242426;
 
-  /* Text */
+  /* Text (Dark) */
   --color-text: #e8e8e6;
   --color-text-secondary: #a8a8a6;
   --color-text-muted: #565658;
 
-  /* Border */
+  /* Border (Dark) */
   --color-border: #303032;
   --color-border-light: #424244;
 
-  /* Navigation */
-  --nav-height: 52px;
-
-  /* Document - Heading */
+  /* Document - Heading (Dark) */
   --heading-h1: #e74c3c;
   --heading-h2: #f1c833;
   --heading-h3: #8be248;
+
+  /* 通用常量（不随主题改变） */
+  --space-6: 1.5rem;
+  --radius-xl: 1rem;
+  --nav-height: 52px;
+}
+
+/* 2. 浅色模式覆盖（当 html 标签带有 data-theme="light" 时生效） */
+:root[data-theme="light"] {
+  /* Background (Light) */
+  --color-bg: #f8f9fa;
+  --color-bg-secondary: #f1f1f3;
+  --color-bg-card: #ffffff;
+
+  /* Text (Light) */
+  --color-text: #1a1a1c;
+  --color-text-secondary: #4a4a4c;
+  --color-text-muted: #868688;
+
+  /* Border (Light) */
+  --color-border: #e5e7eb;
+  --color-border-light: #d1d5db;
+
+  /* Document - Heading (Light) */
+  --heading-h1: #d35400; /* 浅色下稍微加深一点红色以保证阅读 */
+  --heading-h2: #b7950b;
+  --heading-h3: #1e8449;
+  
+  /* 调整浅色下的透明度颜色 */
+  --color-primary-faint: rgba(231, 76, 60, 0.2);
+  --color-primary-soft: rgba(231, 76, 60, 0.25);
+}
+
+/* 3. 基础类定义（移出 :root 内部） */
+@layer components {
+  .card-border {
+    background-color: var(--color-bg-card);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    color: var(--color-text);
+    transition: all 0.3s ease; /* 增加平滑切换效果 */
+  }
 }

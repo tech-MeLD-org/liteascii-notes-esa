@@ -17,13 +17,11 @@ const tagMap = countTags(validNotes);
 
 const categories = Array.from(categoryMap.entries())
   .sort(([,a], [,b]) => b - a)
-  .map(([name, count]) => ({ name, href: `/category/${encodeURIComponent(name)}`, count }))
-  .slice(0, 10);
+  .map(([name, count]) => ({ name, href: `/category/${encodeURIComponent(name)}`, count }));
 
 const tags = Array.from(tagMap.entries())
   .sort(([,a], [,b]) => b - a)
-  .map(([name, count]) => ({ name, href: `/tags/${encodeURIComponent(name)}`, count }))
-  .slice(0, 20);
+  .map(([name, count]) => ({ name, href: `/tags/${encodeURIComponent(name)}`, count }));
 
 // 获取全部文档，按日期排序
 const notes = sortByDate(validNotes).map(note => ({
@@ -31,7 +29,7 @@ const notes = sortByDate(validNotes).map(note => ({
   href: `/notes/${noteSlug(note.id)}`,
   date: formatDate(note.data.date),
   description: note.data.description,
-  category: note.data.category,
+  category: note.data.category as string | undefined,
   tags: note.data.tags || [],
 }));
 ---
@@ -51,6 +49,7 @@ const notes = sortByDate(validNotes).map(note => ({
           tagCount={tagMap.size}
           {categories}
           {tags}
+          currentPath="/notes"
         />
       </aside>
 

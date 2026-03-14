@@ -16,18 +16,17 @@
   }
 
   interface Props {
-    // ProfileCard props
     name?: string;
     description?: string;
     avatar?: string;
     noteCount?: number;
     categoryCount?: number;
     tagCount?: number;
-    // Navigation props
     categories?: Category[];
     tags?: Tag[];
     currentCategory?: string;
     currentTag?: string;
+    currentPath?: string;
   }
 
   let {
@@ -40,12 +39,24 @@
     categories = [],
     tags = [],
     currentCategory,
-    currentTag
+    currentTag,
+    currentPath
   }: Props = $props();
+
+  const processedCategories = $derived(
+    categories.map(cat => 
+      cat.name === '未分类' 
+        ? { ...cat, count: noteCount } 
+        : cat
+    )
+  );
+
+  const categoryNavCurrent = $derived(
+    currentCategory || (currentPath === '/notes' ? '未分类' : undefined)
+  );
 </script>
 
-<aside class="flex flex-col gap-6">
-  <!-- Profile Card -->
+<aside class="sidebar-container">
   <ProfileCard 
     {name}
     {description}
@@ -55,22 +66,20 @@
     {tagCount}
   />
 
-  <!-- Categories -->
   {#if categories.length > 0}
-    <div class="bg-bg-card border border-border-color rounded-xl p-5">
-      <h3 class="text-sm font-bold text-text-main mb-3 flex items-center gap-2">
-        <span class="w-1 h-4 bg-primary rounded-full"></span>
+    <div class="card-border">
+      <h3 class="sidebar-section-title">
+        <span class="sidebar-section-indicator"></span>
         分类
       </h3>
-      <CategoryNav {categories} current={currentCategory} />
+      <CategoryNav categories={processedCategories} current={categoryNavCurrent} />
     </div>
   {/if}
 
-  <!-- Tags -->
   {#if tags.length > 0}
-    <div class="bg-bg-card border border-border-color rounded-xl p-5">
-      <h3 class="text-sm font-bold text-text-main mb-3 flex items-center gap-2">
-        <span class="w-1 h-4 bg-primary rounded-full"></span>
+    <div class="card-border">
+      <h3 class="sidebar-section-title">
+        <span class="sidebar-section-indicator"></span>
         标签
       </h3>
       <TagCloud {tags} current={currentTag} />

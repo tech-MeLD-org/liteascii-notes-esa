@@ -18,7 +18,7 @@
   }: Props = $props();
 </script>
 
-<div class="bg-[#242426] border border-[#303032] rounded-xl p-6">
+<div class="card-border">
   <div class="flex items-center gap-4 mb-4">
     {#if avatar}
       <img src={avatar} alt={name} class="w-16 h-16 rounded-full border-2 border-[#e74c3c]" />

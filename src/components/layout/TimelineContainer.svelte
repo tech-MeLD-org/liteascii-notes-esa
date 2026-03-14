@@ -1,5 +1,4 @@
 <script lang="ts">
-  //import NoteCard from './NoteCard.svelte';
   import Pill from '../ui/Pill.svelte';
   import type { TimelineYear, UndatedNote } from '../../lib/hooks/useTimeline.svelte';
 
@@ -11,47 +10,38 @@
   let { years, undated }: Props = $props();
 </script>
 
-<!-- 时间轴内容 -->
 {#if years.length > 0}
   <div class="relative">
-    <!-- 垂直时间线 -->
     <div class="timeline-line"></div>
 
     {#each years as year}
-      <section class="mb-12 relative">
-        <!-- 年份标题 -->
-        <div class="flex items-center gap-4 mb-6">
-          <div class="z-10 bg-[var(--color-bg)] py-1 font-mono font-bold text-[var(--color-primary)] tracking-wider">
+      <section class="timeline-year-section">
+        <div class="timeline-year-header">
+          <div class="timeline-year-badge">
             {year.year}
           </div>
-          <div class="flex-1 h-px bg-[var(--color-border)] opacity-50"></div>
+          <div class="timeline-year-divider"></div>
         </div>
 
-        <!-- 该年份的笔记列表 -->
-        <div class="space-y-6">
+        <div class="timeline-notes-list">
           {#each year.notes as note}
-            <article class="timeline-item relative flex gap-4 sm:gap-8">
-              <!-- 左侧日期和圆点 -->
-              <div class="flex flex-col items-center w-14 flex-shrink-0 pt-3">
-                <time class="text-xs text-[var(--color-text-muted)] font-mono whitespace-nowrap mb-2">
+            <article class="timeline-item">
+              <div class="timeline-date-wrapper">
+                <time class="timeline-date-text">
                   {note.monthDay}
                 </time>
                 <div class="timeline-dot"></div>
               </div>
 
-              <!-- 右侧卡片 -->
-              <div class="flex-1 pb-2">
-                <div class="interactive-card ui-card ui-card-hover relative flex flex-col p-4">
-                  <h3 class="text-[0.95rem] font-semibold mb-3">
-                    <a 
-                      href={note.href} 
-                      class="text-[var(--color-text)] hover:text-[var(--color-primary)] transition-colors before:absolute before:inset-0 before:z-0 outline-none"
-                    >
+              <div class="timeline-card-wrapper">
+                <div class="interactive-card ui-card ui-card-hover p-4 group flex flex-col relative">
+                  <h3 class="ui-card-title text-[0.95rem]">
+                    <a href={note.href} class="ui-card-link">
                       {note.title}
                     </a>
                   </h3>
 
-                  <div class="flex items-center gap-2 flex-wrap relative z-10">
+                  <div class="ui-card-footer">
                     {#if note.category}
                       <Pill variant="category" size="sm" label={note.category} autoLink={true} />
                     {/if}
@@ -80,23 +70,17 @@
   </div>
 {/if}
 
-<!-- 无日期笔记 -->
 {#if undated.length > 0}
-  <section class="mt-16 pt-8 border-t border-[var(--color-border)]">
-    <h2 class="text-xs font-mono uppercase tracking-widest text-[var(--color-text-muted)] mb-6 flex items-center gap-2">
-      <span class="w-2 h-2 bg-[var(--color-border)] rounded-full"></span>
+  <section class="undated-section">
+    <h2 class="undated-header">
+      <span class="undated-dot"></span>
       Undated Notes
     </h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="undated-grid">
       {#each undated as note}
-        <a 
-          href={note.href} 
-          class="flex flex-col p-4 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg hover:border-[var(--color-primary-soft)] transition-all"
-        >
-          <span class="text-[0.9rem] font-medium text-[var(--color-text)]">{note.title}</span>
-          <span class="text-[10px] font-mono text-[var(--color-text-muted)] mt-2 uppercase tracking-tight">
-            {note.path}
-          </span>
+        <a href={note.href} class="undated-card">
+          <span class="undated-title">{note.title}</span>
+          <span class="undated-path">{note.path}</span>
         </a>
       {/each}
     </div>
