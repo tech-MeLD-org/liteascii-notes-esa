@@ -1,54 +1,12 @@
 /* global.css - Tailwind CSS v4 */
 @import "tailwindcss";
 
-/* 自定义主题配置（替代 tailwind.config.mjs） */
-@theme {
-  /* Primary colors */
-  --color-primary: #e74c3c;
-  --color-primary-light: #ff6b5b;
-  --color-primary-dark: #c0392b;
-  --color-primary-faint: rgba(231, 76, 60, 0.1);
-  --color-primary-soft: rgba(231, 76, 60, 0.2);
-  
-  /* Background */
-  --color-bg: #161618;
-  --color-bg-secondary: #1e1e20;
-  --color-bg-card: #242426;
-  
-  /* Surface (兼容旧代码) */
-  --color-surface: #1e1e20;
-  
-  /* Text */
-  --color-text: #e8e8e6;
-  --color-text-main: #e8e8e6;  /* 兼容旧代码 */
-  --color-text-secondary: #a8a8a6;
-  --color-text-muted: #565658;
-  
-  /* Border */
-  --color-border: #303032;
-  --color-border-color: #303032;  /* 兼容旧代码 */
-  --color-border-light: #424244;
-  
-  /* Document headings */
-  --color-heading-h1: #e74c3c;
-  --color-heading-h2: #f1c833;
-  --color-heading-h3: #8be248;
-  
-  /* Spacing */
-  --spacing-18: 4.5rem;
-  --spacing-88: 22rem;
-  --spacing-128: 32rem;
-  
-  /* Border radius */
-  --radius-xl: 12px;
-  --radius-2xl: 16px;
-  
-  /* Font family */
-  --font-mono: "Courier New", Courier, monospace;
-}
+
 
 /* 导入其他样式 */
 @import "./tokens.css";
 @import "./base.css";
 @import "./components.css";
 @import "./prose.css";
+@import "./theme.css";
+@import "./layout.css";

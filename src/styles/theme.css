@@ -1,0 +1,25 @@
+/* 浅色模式覆盖 */
+:root[data-theme="light"] {
+  /* Background (Light) */
+  --color-bg: #f8f9fa;
+  --color-bg-secondary: #f1f1f3;
+  --color-bg-card: #ffffff;
+
+  /* Text (Light) */
+  --color-text: #1a1a1c;
+  --color-text-secondary: #4a4a4c;
+  --color-text-muted: #868688;
+
+  /* Border (Light) */
+  --color-border: #e5e7eb;
+  --color-border-light: #d1d5db;
+
+  /* Document - Heading (Light) */
+  --heading-h1: #d35400;
+  --heading-h2: #b7950b;
+  --heading-h3: #1e8449;
+  
+  /* 调整浅色下的透明度颜色 */
+  --color-primary-faint: rgba(231, 76, 60, 0.2);
+  --color-primary-soft: rgba(231, 76, 60, 0.25);
+}

@@ -304,3 +304,17 @@
   .footer-copy {
     @apply text-[0.72rem] text-[var(--color-text-muted)] font-mono;
   }
+
+
+
+  /* sidebar定义 */
+@layer components {
+  .card-border {
+    background-color: var(--color-bg-card);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    color: var(--color-text);
+    transition: all 0.3s ease;
+  }
+}

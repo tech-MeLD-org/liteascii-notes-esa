@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
 
-  let { videoUrl = "/video/test03.webm", noteCount = 0 } = $props();
+  let { videoUrl = "/video/test.mp4", noteCount = 0 } = $props();
 
   let container;
   let canvas;
