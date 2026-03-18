@@ -209,6 +209,7 @@ export default defineConfig({
     remarkPlugins: [remarkObsidianImages, remarkObsidianLinks],
     shikiConfig: {
       theme: 'github-dark',
+      
       wrap: true,
     },
   },

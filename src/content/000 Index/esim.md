@@ -1,3 +1,11 @@
+---
+title: esim
+date: 2026-03-19
+tags: []
+description: 
+category: 未分类
+---
+
 
 1. 在哪里买并不重要。重要的是 SIM 卡的“原籍国”。如果你在中国买香港 SIM 卡，它仍然会将流量路由到香港。
     

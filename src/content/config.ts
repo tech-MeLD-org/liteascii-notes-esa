@@ -12,11 +12,14 @@ const notes = defineCollection({
     base: './src/content',
   }),
   schema: z.object({
-    title: z.string().optional(),
-    date: z.coerce.date().optional(),
-    tags: z.array(z.string()).optional(),
-    description: z.string().optional(),
-    draft: z.boolean().optional(),
+    title: z.string().optional().nullable(),
+    date: z.coerce.date().optional().nullable(),
+    description: z.string().optional().nullable(),
+
+    // 💡 建议同时也把 tags 和 category 设为可选，防止后续报错
+    tags: z.array(z.string()).optional().default([]),
+    category: z.string().optional().nullable(),
+    draft: z.boolean().optional().nullable(),
   }).passthrough(),
 });
 
