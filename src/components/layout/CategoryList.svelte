@@ -53,14 +53,14 @@
 />
 
 <aside 
-  class="relative h-full border-r border-border-color flex-shrink-0 bg-bg z-10"
+  class="relative h-full border-r border-[var(--color-border)] flex-shrink-0 bg-[var(--color-bg)] z-10"
   style="width: {sidebar.width}px"
 >
   <div 
     bind:this={sidebarRef}
     class="sticky top-[var(--nav-h)] px-5 py-8 max-h-[calc(100vh-var(--nav-h))] overflow-y-auto scrollbar-none"
   >
-    <div class="text-[0.65rem] font-bold text-text-tertiary mb-5 tracking-[0.12em] opacity-70">
+    <div class="text-[0.65rem] font-bold text-[var(--color-text-muted)] mb-5 tracking-[0.12em] opacity-70">
       EXPLORER
     </div>
     
@@ -71,7 +71,7 @@
 
   <div 
     class="absolute -right-0.5 top-0 bottom-0 w-1 cursor-col-resize z-20 transition-colors duration-200
-           hover:bg-red/60 {sidebar.isResizing ? 'bg-red/60' : ''}"
+           hover:bg-[color-mix(in_srgb,var(--color-primary)_60%,transparent)] {sidebar.isResizing ? 'bg-[color-mix(in_srgb,var(--color-primary)_60%,transparent)]' : ''}"
     onmousedown={sidebar.actions.startResize}
     role="separator"
     aria-orientation="vertical"
@@ -83,8 +83,8 @@
   {#each Object.values(node.children) as child}
     <details open style="--depth: {depth}">
       <summary 
-        class="flex items-center px-2.5 py-1.5 text-[0.82rem] rounded cursor-pointer text-text-tertiary
-               hover:bg-bg-secondary hover:text-text whitespace-nowrap overflow-hidden text-ellipsis w-full"
+        class="flex items-center px-2.5 py-1.5 text-[0.82rem] rounded cursor-pointer text-[var(--color-primary)]
+               hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-primary-light)] whitespace-nowrap overflow-hidden text-ellipsis w-full"
         title={child.name}
       >
         {child.name}
@@ -97,9 +97,9 @@
     <a 
       href={`/notes/${file.slug}`} 
       class="flex items-center px-2.5 py-1.5 text-[0.82rem] rounded no-underline cursor-pointer
-             text-text-secondary whitespace-nowrap overflow-hidden text-ellipsis w-full
-             hover:bg-bg-secondary hover:text-text
-             {currentSlug === file.slug ? 'bg-red-faint text-red font-semibold' : ''}"
+             text-[var(--color-text-secondary)] whitespace-nowrap overflow-hidden text-ellipsis w-full
+             hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text)]
+             {currentSlug === file.slug ? 'bg-[var(--color-primary-faint)] text-[var(--color-primary)] font-semibold' : ''}"
       style="padding-left: calc(var(--depth) * 0.8rem + 1.4rem)"
       title={file.name}
     >

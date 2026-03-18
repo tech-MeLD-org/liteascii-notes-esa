@@ -1,13 +1,13 @@
 <script lang="ts">
   import { useDocument, type DocumentHeading } from '../../lib/hooks/useDocument.svelte';
-
+  //文档目录
   interface Props {
     headings: DocumentHeading[];
   }
 
   let { headings }: Props = $props();
   
-  const { activeHeadingId, scrollToHeading } = useDocument(headings);
+  const { activeHeadingId, passingHeadingIds, scrollToHeading } = useDocument(headings);
 </script>
 
 <aside class="w-[240px] flex-shrink-0 sticky top-[calc(52px+2rem)] h-fit max-h-[calc(100vh-52px-4rem)] overflow-y-auto scrollbar-none hidden lg:block">
@@ -48,5 +48,18 @@
   .scrollbar-none {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  
+  /* 仅保留错位差异 */
+  .doc-outline-level-1 {
+    padding-left: 0.5rem;
+  }
+  
+  .doc-outline-level-2 {
+    padding-left: 1.5rem;
+  }
+  
+  .doc-outline-level-3 {
+    padding-left: 2.5rem;
   }
 </style>

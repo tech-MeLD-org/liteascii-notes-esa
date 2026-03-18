@@ -23,6 +23,8 @@ interface UseDocumentOptions {
 interface UseDocumentReturn {
   /** 当前激活的标题 ID */
   activeHeadingId: string | null;
+  /** 经过的标题 ID 数组（在当前激活标题之前的所有标题） */
+  passingHeadingIds: string[];
   /** 滚动到指定标题 */
   scrollToHeading: (slug: string) => void;
 }
@@ -41,6 +43,7 @@ export function useDocument(
   } = options;
 
   let activeHeadingId = $state<string | null>(null);
+  let passingHeadingIds = $state<string[]>([]);
   let isClickScrolling = false;
   let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -125,6 +128,7 @@ export function useDocument(
 
   return {
     get activeHeadingId() { return activeHeadingId; },
+    get passingHeadingIds() { return passingHeadingIds; },
     scrollToHeading
   };
 }

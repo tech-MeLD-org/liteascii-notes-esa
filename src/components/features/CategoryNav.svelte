@@ -1,6 +1,6 @@
 <script lang="ts">
   import { useExpandableList } from '../../lib/hooks/useExpandableList.svelte';
-
+  //文件夹目录
   interface Category {
     name: string;
     href: string;
@@ -30,7 +30,7 @@
       class="flex items-center justify-between py-2 px-3 rounded-lg text-sm transition-colors
         {isActive
           ? 'bg-[var(--color-primary-faint)] text-[var(--color-primary)] font-semibold' 
-          : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text)]'}"
+          : 'text-[var(--color-primary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-primary-light)]'}"
     >
       <span>{displayName}</span>
       <span class="text-xs text-[var(--color-text-muted)] font-mono">{category.count}</span>
