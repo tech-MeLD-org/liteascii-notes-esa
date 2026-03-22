@@ -22,31 +22,27 @@ const {
     <meta name="description" content={description} />
     <title>{title}</title>
 
-    <!-- Pagefind UI (available after `pnpm build`) -->
-    <link rel="stylesheet" href="/_pagefind/pagefind-ui.css" />
+    <link rel="stylesheet" href="/pagefind/pagefind-ui.css" />
 
-    <!-- Prevent flash of wrong theme: dark is default (no attr), light = data-theme="light" -->
     <script is:inline>
       (function () {
         const stored = localStorage.getItem('theme');
         if (stored === 'light') {
           document.documentElement.setAttribute('data-theme', 'light');
         }
-        // dark is default CSS :root — no attribute needed
       })();
     </script>
   </head>
   <body>
     <slot />
 
-    <!-- Pagefind UI script (available after build) -->
     <script is:inline>
-      // Only load pagefind in production build
       window.__pagefind_ready = false;
-      fetch('/_pagefind/pagefind-ui.js').then(r => {
+      // 将 _pagefind 全部替换为 pagefind
+      fetch('/pagefind/pagefind-ui.js').then(r => {
         if (r.ok) {
           const s = document.createElement('script');
-          s.src = '/_pagefind/pagefind-ui.js';
+          s.src = '/pagefind/pagefind-ui.js';
           s.onload = () => { window.__pagefind_ready = true; };
           document.head.appendChild(s);
         }
@@ -55,17 +51,35 @@ const {
   </body>
 </html>
 
-
-
-
 <style is:global>
   /* ====== 统一 Meta 标签样式 ====== */
-  .meta-group { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; position: relative; z-index: 2; }
-  
+  .meta-group {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 2;
+  }
 
   /* ====== 统一“全卡片点击”交互逻辑 ====== */
-  .card-click-wrapper { position: relative; cursor: pointer; }
-  .card-main-link { text-decoration: none; color: inherit; display: inline-block; }
+  .card-click-wrapper {
+    position: relative;
+    cursor: pointer;
+  }
+  .card-main-link {
+    text-decoration: none;
+    color: inherit;
+    display: inline-block;
+  }
   /* 利用 ::before 覆盖整个相对定位的父级卡片 */
-  .card-main-link::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; }
+  .card-main-link::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+  }
 </style>
