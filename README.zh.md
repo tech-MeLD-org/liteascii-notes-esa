@@ -6,7 +6,7 @@
 
 基于 **Astro 5 · Svelte 5 · Tailwind CSS v4** 构建。
 
-构建输出在 `dist/` 目录，`Demo`示例网站部署在 `Vercel`：[Demo示例网站](https://lite-ascii.vercel.app])
+构建输出在 `dist/` 目录，`Demo`示例网站部署在 `Vercel`：[Demo示例网站](https://lite-ascii.vercel.app)
 
 ## ✨ 特性
 
