@@ -229,6 +229,8 @@ import Animation from '../ascii/WebGLASCII_color.svelte';
 
 The build output in `dist/` can be deployed to any static hosting provider:
 
+.env：GITHUB_TOKEN=""
+
 * [Vercel](https://vercel.com)
 * [Netlify](https://netlify.com)
 * [GitHub Pages](https://pages.github.com)

@@ -10,19 +10,18 @@
 
 ## ✨ 特性
 
-### 1. 🎬 **ASCII 动画** 
+### 1. 🎬 **ASCII 动画**
 
 支持 TypeWriter 打字动画和 WebGL ASCII 视频动画渲染
 
 ![ASCII 动画1](public/gif/TypeWriter.gif)
 ![ASCII 动画2](public/gif/ascii.gif)
 
-### 2. 🔗 **Obsidian 关系图谱** 
+### 2. 🔗 **Obsidian 关系图谱**
 
 目录笔记结构图和笔记引用关系可视化
 
 ![Obsidian 关系图谱](public/gif/obsidianGraph.gif)
-
 
 ### 3. 📝 **Obsidian 兼容**
 
@@ -195,6 +194,8 @@ import Animation from '../ascii/WebGLASCII_color.svelte';
 ### 静态部署
 
 构建输出在 `dist/` 目录，可部署到任意静态托管服务：
+
+.env：GITHUB_TOKEN=""
 
 * [Vercel](https://vercel.com)
 * [Netlify](https://netlify.com)
