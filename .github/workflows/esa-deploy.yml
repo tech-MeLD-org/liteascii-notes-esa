@@ -37,4 +37,4 @@ jobs:
           ALIBABA_CLOUD_ACCESS_KEY_ID: ${{ secrets.ALIBABA_CLOUD_ACCESS_KEY_ID }}
           ALIBABA_CLOUD_ACCESS_KEY_SECRET: ${{ secrets.ALIBABA_CLOUD_ACCESS_KEY_SECRET }}
         # --yes 跳过交互式确认，直接静默部署
-        run: npx @alicloud/esa-cli deploy --yes
+        run: esa-cli deploy --yes
