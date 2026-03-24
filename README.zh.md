@@ -197,6 +197,8 @@ import Animation from '../ascii/WebGLASCII_color.svelte';
 
 .env：GITHUB_TOKEN=""
 
+配置文件：config.ts
+
 * [Vercel](https://vercel.com)
 * [Netlify](https://netlify.com)
 * [GitHub Pages](https://pages.github.com)
