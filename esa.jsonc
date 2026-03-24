@@ -1,0 +1,8 @@
+{
+  "name": "liteascii-notes-esa",
+  "description": "LiteASCII Notes ESA",
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "auto"
+  }
+}
