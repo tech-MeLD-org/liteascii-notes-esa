@@ -1,58 +1,76 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import Header from '../../components/layout/Header.svelte';
-import Footer from '../../components/layout/Footer.svelte';
-import Sidebar from '../../components/layout/Sidebar.svelte';
-import NoteList from '../../components/features/NoteList.svelte';
-import PageHeader from '../../components/layout/PageHeader.svelte';
-import { getCollection } from 'astro:content';
-import { extractTitle, noteSlug, formatDate, countCategories, countTags } from '../../lib/core/note-logic';
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/layout/Header.svelte";
+import Footer from "../../components/layout/Footer.svelte";
+import Sidebar from "../../components/layout/Sidebar.svelte";
+import NoteList from "../../components/features/NoteList.svelte";
+import PageHeader from "../../components/layout/PageHeader.svelte";
+import { getCollection } from "astro:content";
+import {
+  extractTitle,
+  noteSlug,
+  formatDate,
+  countCategories,
+  countTags,
+} from "../../lib/core/note-logic";
 
 export async function getStaticPaths() {
-  const allNotes = await getCollection('notes');
-  
+  const allNotes = await getCollection("notes");
+
   const tagMap = countTags(allNotes);
   const categoryMap = countCategories(allNotes);
 
   const tags = Array.from(tagMap.entries())
-    .sort(([,a], [,b]) => b - a)
+    .sort(([, a], [, b]) => b - a)
     .map(([name]) => name);
 
   const totalNotes = allNotes.length;
-  
-  return tags.map((tag) => {
-    const filteredNotes = allNotes.filter((note) => 
-      note.data.tags?.includes(tag)
-    ).sort((a, b) => {
-      const da = a.data.date ? new Date(a.data.date).getTime() : 0;
-      const db = b.data.date ? new Date(b.data.date).getTime() : 0;
-      return db - da;
-    });
-    
+
+  return tags.map((tagName) => {
+    const filteredNotes = allNotes
+      .filter((note) => note.data.tags?.includes(tagName))
+      .sort((a, b) => {
+        const da = a.data.date ? new Date(a.data.date).getTime() : 0;
+        const db = b.data.date ? new Date(b.data.date).getTime() : 0;
+        return db - da;
+      });
+
+    // 将空格替换为横杠，用于URL友好的slug
+    const tagSlug = tagName.replace(/\s+/g, "-");
+
     return {
-      params: { tag }, // 直接传入原始大小写的 tag，例如 'Index'
-      props: { 
-        notes: filteredNotes, 
-        tag,
+      params: { tag: tagSlug },
+      props: {
+        notes: filteredNotes,
+        tag: tagName, // 保持原始标签名用于显示
+        tagSlug, // 添加slug版本
         totalNotes,
         categoryMap,
-        tagMap
+        tagMap,
       },
     };
   });
 }
 
 const { tag } = Astro.params;
-const { notes, totalNotes, categoryMap, tagMap } = Astro.props;
+const { notes, totalNotes, categoryMap, tagMap, tag: originalTag } = Astro.props;
 
-// 确保侧边栏生成的链接也严格使用原始大小写
+// 使用统一的横杠格式生成链接
 const categories = Array.from(categoryMap.entries())
   .sort(([,a], [,b]) => b - a)
-  .map(([name, count]) => ({ name, href: `/category/${encodeURIComponent(name)}`, count }));
+  .map(([name, count]) => ({ 
+    name, 
+    href: `/category/${name.replace(/\s+/g, '-')}`, 
+    count 
+  }));
 
 const tags = Array.from(tagMap.entries())
   .sort(([,a], [,b]) => b - a)
-  .map(([name, count]) => ({ name, href: `/tags/${encodeURIComponent(name)}`, count }));
+  .map(([name, count]) => ({ 
+    name, 
+    href: `/tags/${name.replace(/\s+/g, '-')}`, 
+    count 
+  }));
 
 const noteListData = notes.map(note => ({
   title: extractTitle(note),
@@ -66,10 +84,11 @@ const noteListData = notes.map(note => ({
 
 <Layout title={`Tag: ${tag} · LiteASCII`}>
   <Header client:load />
-  
+
   <div class="pt-[calc(52px+2.5rem)] px-4 pb-16">
-    <div class="flex w-full max-w-[1200px] mx-auto gap-10 items-start flex-col lg:flex-row">
-      
+    <div
+      class="flex w-full max-w-[1200px] mx-auto gap-10 items-start flex-col lg:flex-row"
+    >
       <aside class="w-full lg:w-[260px] flex-shrink-0">
         <Sidebar
           client:load
@@ -90,14 +109,13 @@ const noteListData = notes.map(note => ({
           subtitle={`${notes.length} notes found in this tag`}
         />
 
-        <NoteList 
+        <NoteList
           client:load
           notes={noteListData}
           emptyText="该标签下暂无笔记"
           highlightTag={tag}
         />
       </main>
-      
     </div>
   </div>
 

@@ -17,11 +17,11 @@ const tagMap = countTags(validNotes);
 
 const categories = Array.from(categoryMap.entries())
   .sort(([,a], [,b]) => b - a)
-  .map(([name, count]) => ({ name, href: `/category/${encodeURIComponent(name)}`, count }));
+  .map(([name, count]) => ({ name, href: `/category/${name.replace(/\s+/g, '-')}`, count }));
 
 const tags = Array.from(tagMap.entries())
   .sort(([,a], [,b]) => b - a)
-  .map(([name, count]) => ({ name, href: `/tags/${encodeURIComponent(name)}`, count }));
+  .map(([name, count]) => ({ name, href: `/tags/${name.replace(/\s+/g, '-')}`, count }));
 
 // 获取全部文档，按日期排序
 const notes = sortByDate(validNotes).map(note => ({

@@ -22,14 +22,14 @@ const noteCount = allNotes.length;
 const categoryMap = countCategories(allNotes);
 const allCategories = Array.from(categoryMap.entries())
   .sort(([,a], [,b]) => b - a)
-  .map(([name, count]) => ({ name, href: `/category/${encodeURIComponent(name)}`, count }))
+  .map(([name, count]) => ({ name, href: `/category/${name.replace(/\s+/g, '-')}`, count }))
   .slice(0, 8);
 
 // 统计标签
 const tagMap = countTags(allNotes);
 const allTags = Array.from(tagMap.entries())
   .sort(([,a], [,b]) => b - a)
-  .map(([name, count]) => ({ name, href: `/tags/${encodeURIComponent(name)}`, count }))
+  .map(([name, count]) => ({ name, href: `/tags/${name.replace(/\s+/g, '-')}`, count }))
   .slice(0, 20);
 ---
 
