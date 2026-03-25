@@ -20,20 +20,24 @@ export async function getStaticPaths() {
 
   const totalNotes = allNotes.length;
   
-  return tags.map((tag) => {
+  return tags.map((tagName) => {
     const filteredNotes = allNotes.filter((note) => 
-      note.data.tags?.includes(tag)
+      note.data.tags?.includes(tagName)
     ).sort((a, b) => {
       const da = a.data.date ? new Date(a.data.date).getTime() : 0;
       const db = b.data.date ? new Date(b.data.date).getTime() : 0;
       return db - da;
     });
     
+    // 将空格替换为横杠，用于URL友好的slug
+    const tagSlug = tagName.replace(/\s+/g, '-');
+    
     return {
-      params: { tag }, // 直接传入原始大小写的 tag，例如 'Index'
+      params: { tag: tagSlug },
       props: { 
         notes: filteredNotes, 
-        tag,
+        tag: tagName, // 保持原始标签名用于显示
+        tagSlug, // 添加slug版本
         totalNotes,
         categoryMap,
         tagMap
@@ -43,16 +47,24 @@ export async function getStaticPaths() {
 }
 
 const { tag } = Astro.params;
-const { notes, totalNotes, categoryMap, tagMap } = Astro.props;
+const { notes, totalNotes, categoryMap, tagMap, tag: originalTag } = Astro.props;
 
-// 确保侧边栏生成的链接也严格使用原始大小写
+// 使用统一的横杠格式生成链接
 const categories = Array.from(categoryMap.entries())
   .sort(([,a], [,b]) => b - a)
-  .map(([name, count]) => ({ name, href: `/category/${encodeURIComponent(name)}`, count }));
+  .map(([name, count]) => ({ 
+    name, 
+    href: `/category/${name.replace(/\s+/g, '-')}`, 
+    count 
+  }));
 
 const tags = Array.from(tagMap.entries())
   .sort(([,a], [,b]) => b - a)
-  .map(([name, count]) => ({ name, href: `/tags/${encodeURIComponent(name)}`, count }));
+  .map(([name, count]) => ({ 
+    name, 
+    href: `/tags/${name.replace(/\s+/g, '-')}`, 
+    count 
+  }));
 
 const noteListData = notes.map(note => ({
   title: extractTitle(note),

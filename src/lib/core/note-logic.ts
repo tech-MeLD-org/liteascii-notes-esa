@@ -40,16 +40,16 @@ export function noteSlug(noteId: string): string {
  * 标签转 slug
  */
 export function tagSlug(tag: string): string {
-  // 去掉 .toLowerCase()，只处理空格并进行 URL 编码
-  return encodeURIComponent(tag.replace(/\s+/g, '-'));
+  // 将空格替换为横杠，不进行URL编码（因为路由已经处理）
+  return tag.replace(/\s+/g, '-');
 }
 
 /**
  * 分类转 slug
  */
 export function categorySlug(category: string): string {
-  // 去掉 .toLowerCase()，只处理空格并进行 URL 编码
-  return encodeURIComponent(category.replace(/\s+/g, '-'));
+  // 将空格替换为横杠，不进行URL编码（因为路由已经处理）
+  return category.replace(/\s+/g, '-');
 }
 
 // ==========================================

@@ -60,12 +60,12 @@ const dateStr = date
             <!-- Category 和 Tags -->
             <div class="flex items-center gap-3 flex-wrap mt-4">
               {category && (
-                <Pill client:load variant="category" href={`/category/${category}`}>
+                <Pill client:load variant="category" href={`/category/${category.replace(/\s+/g, '-')}`}>
                   {category}
                 </Pill>
               )}
               {tags.map(tag => (
-                <Pill client:load variant="tag" href={`/tags/${tag}`}>
+                <Pill client:load variant="tag" href={`/tags/${tag.replace(/\s+/g, '-')}`}>
                   #{tag}
                 </Pill>
               ))}
