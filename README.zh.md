@@ -6,7 +6,7 @@
 
 基于 **Astro 5 · Svelte 5 · Tailwind CSS v4** 构建。
 
-构建输出在 `dist/` 目录，`Demo`示例网站部署在 `ESA`：[Demo网站](techmelody.top)
+构建输出在 `dist/` 目录，`Demo`示例网站部署在 `ESA`：[Demo网站](https://www.techmelody.top/)
 
 features : [文档](./features.md)
 
