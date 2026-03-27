@@ -68,7 +68,7 @@ console.log("Token 加载状态:", GITHUB_TOKEN ? "✅ 已加载" : "❌ 未加�
         </h2>
         {repoData ? (
           <div class="grid grid-cols-1 gap-4">
-             <GithubCard repoData={repoData} />
+             <GithubCard client:visible repoData={repoData} />
           </div>
         ) : (
           <div class="p-4 border border-dashed border-border-main rounded-lg text-text-muted text-sm font-mono text-center">
